@@ -1,0 +1,2743 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playa Luxury Hotel — نظام التشغيل</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* PLAYA palette — clean white & ocean blue */
+  --sand:#f5f8fb;
+  --sand-deep:#e7eef5;
+  --ink:#1c2b36;
+  --lagoon:#1a5fb4;
+  --lagoon-deep:#0d3a73;
+  --lagoon-light:#4f96e0;
+  --coral:#2878c8;
+  --coral-deep:#1c5fa8;
+  --gold:#1a5fb4;
+  --line:#d7e2ee;
+
+  --status-available:#3f8a5b;
+  --status-available-bg:#e3f2e7;
+  --status-occupied:#2d6e8e;
+  --status-occupied-bg:#e1eef5;
+  --status-reserved:#c9842f;
+  --status-reserved-bg:#fbedda;
+  --status-dirty:#c7a319;
+  --status-dirty-bg:#fbf3d6;
+  --status-oos:#bf4040;
+  --status-oos-bg:#fbe3e3;
+  --status-maint:#6b6b6b;
+  --status-maint-bg:#e9e9e7;
+
+  --radius:14px;
+  --shadow:0 2px 10px rgba(26,95,180,0.08);
+  --shadow-lg:0 8px 30px rgba(26,95,180,0.14);
+}
+
+[data-theme="dark"]{
+  --sand:#0e1824;
+  --sand-deep:#16222f;
+  --ink:#e8eef5;
+  --lagoon:#6fa8e8;
+  --lagoon-deep:#091420;
+  --lagoon-light:#3c6064;
+  --coral:#5a9fe8;
+  --coral-deep:#4a8fd8;
+  --gold:#6fa8e8;
+  --line:#28384a;
+
+  --status-available-bg:#1e3326;
+  --status-occupied-bg:#1c2f3a;
+  --status-reserved-bg:#3a2c14;
+  --status-dirty-bg:#3a3414;
+  --status-oos-bg:#3a1e1e;
+  --status-maint-bg:#2c2c2a;
+
+  --shadow:0 2px 10px rgba(0,0,0,0.3);
+  --shadow-lg:0 8px 30px rgba(0,0,0,0.45);
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Cairo','Tajawal',sans-serif;
+  background:var(--sand);
+  color:var(--ink);
+  transition:background .3s, color .3s;
+  -webkit-font-smoothing:antialiased;
+}
+.serif{font-family:'Cormorant Garamond', serif;}
+
+#app{display:flex; min-height:100vh;}
+
+/* ============ SIDEBAR ============ */
+.sidebar{
+  width:240px;
+  background:var(--lagoon-deep);
+  color:#f3ead9;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  position:sticky;
+  top:0;
+  height:100vh;
+  z-index:50;
+  transition:transform .25s ease;
+}
+.sidebar-brand{
+  padding:26px 22px 18px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.sidebar-brand .logo-mark{
+  font-family:'Cormorant Garamond', serif;
+  font-size:28px;
+  font-weight:700;
+  letter-spacing:2px;
+  color:var(--gold);
+}
+.sidebar-brand .logo-sub{
+  font-size:11px;
+  letter-spacing:3px;
+  opacity:.65;
+  margin-top:4px;
+  text-transform:uppercase;
+}
+.sidebar-nav{flex:1; overflow-y:auto; padding:14px 12px;}
+.nav-item{
+  display:flex; align-items:center; gap:12px;
+  padding:12px 14px;
+  border-radius:10px;
+  color:#cfe3e1;
+  cursor:pointer;
+  font-size:14.5px;
+  font-weight:500;
+  margin-bottom:2px;
+  transition:background .15s, color .15s;
+  user-select:none;
+}
+.nav-item .icon{font-size:18px; width:22px; text-align:center; flex-shrink:0;}
+.nav-item:hover{background:rgba(255,255,255,0.06); color:#fff;}
+.nav-item.active{
+  background:var(--coral);
+  color:#fff;
+  box-shadow:0 4px 14px rgba(217,120,79,0.35);
+}
+.nav-section-label{
+  font-size:11px; letter-spacing:2px; text-transform:uppercase;
+  opacity:.45; padding:16px 14px 6px; font-weight:600;
+}
+.sidebar-footer{
+  padding:14px 18px 18px;
+  border-top:1px solid rgba(255,255,255,0.08);
+  font-size:12.5px;
+}
+.user-chip{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+.user-avatar{
+  width:34px; height:34px; border-radius:50%;
+  background:var(--coral);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:14px; flex-shrink:0;
+}
+.user-meta .name{font-weight:600; font-size:13.5px;}
+.user-meta .role{opacity:.6; font-size:11px;}
+.logout-btn{
+  width:100%; padding:8px; border-radius:8px;
+  background:rgba(255,255,255,0.07); color:#f3ead9; border:none;
+  font-size:12.5px; cursor:pointer; font-family:inherit; font-weight:500;
+}
+.logout-btn:hover{background:rgba(255,255,255,0.13);}
+
+/* mobile sidebar */
+.sidebar-overlay{display:none;}
+@media (max-width:900px){
+  .sidebar{position:fixed; transform:translateX(-105%); height:100vh; box-shadow:var(--shadow-lg);}
+  html[dir="rtl"] .sidebar{transform:translateX(105%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:45;
+  }
+  .sidebar-overlay.show{display:block;}
+}
+
+/* ============ MAIN ============ */
+.main{flex:1; min-width:0; display:flex; flex-direction:column;}
+.topbar{
+  position:sticky; top:0; z-index:30;
+  background:var(--sand);
+  border-bottom:1px solid var(--line);
+  padding:14px 24px;
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  backdrop-filter:blur(6px);
+}
+.topbar-title{display:flex; align-items:center; gap:12px;}
+.topbar-title h1{font-size:20px; font-weight:700;}
+.menu-toggle{
+  display:none; background:none; border:none; font-size:22px; cursor:pointer; color:var(--ink);
+}
+@media (max-width:900px){ .menu-toggle{display:block;} }
+.topbar-actions{display:flex; align-items:center; gap:10px;}
+.icon-btn{
+  width:38px; height:38px; border-radius:10px; border:1px solid var(--line);
+  background:var(--sand); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:17px; color:var(--ink); transition:.15s;
+}
+.icon-btn:hover{background:var(--sand-deep);}
+.lang-toggle{font-size:13px; font-weight:700; width:auto; padding:0 12px;}
+
+.content{padding:20px 24px 60px; flex:1;}
+
+/* ============ LOGIN ============ */
+.login-wrap{
+  min-height:100vh; width:100%; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(160deg, var(--lagoon-deep) 0%, var(--lagoon) 100%);
+  padding:20px; gap:40px; flex-wrap:wrap;
+}
+.login-logo-panel{
+  display:flex; align-items:center; justify-content:center;
+  flex:0 0 auto;
+}
+.login-logo-img{
+  width:260px; max-width:60vw; height:auto;
+  filter:drop-shadow(0 10px 30px rgba(0,0,0,0.25));
+}
+@media(max-width:760px){
+  .login-logo-panel{ order:-1; }
+  .login-logo-img{ width:140px; }
+}
+.login-card{
+  background:var(--sand); border-radius:20px; padding:42px 36px;
+  width:100%; max-width:380px; box-shadow:var(--shadow-lg);
+  text-align:center; flex:0 0 auto;
+}
+.login-card .logo-mark{
+  font-family:'Cormorant Garamond', serif; font-size:36px; font-weight:700;
+  color:var(--lagoon); letter-spacing:3px;
+}
+.login-card .logo-sub{
+  font-size:11px; letter-spacing:4px; text-transform:uppercase; opacity:.55; margin:6px 0 30px;
+}
+.login-users{display:flex; flex-direction:column; gap:10px;}
+.login-user-btn{
+  display:flex; align-items:center; gap:14px;
+  padding:14px 16px; border-radius:12px; border:1px solid var(--line);
+  background:#fff; cursor:pointer; text-align:right; font-family:inherit;
+  transition:.15s;
+}
+[data-theme="dark"] .login-user-btn{background:var(--sand-deep);}
+.login-user-btn:hover{border-color:var(--coral); transform:translateY(-1px); box-shadow:var(--shadow);}
+.login-user-btn .user-avatar{width:42px; height:42px; font-size:16px;}
+.login-user-btn .name{font-weight:700; font-size:15px;}
+.login-user-btn .role{font-size:12px; opacity:.6; margin-top:2px;}
+
+/* ============ CARDS / GRID ============ */
+.card{
+  background:#fff; border-radius:var(--radius); padding:18px;
+  box-shadow:var(--shadow); border:1px solid var(--line);
+}
+[data-theme="dark"] .card{background:var(--sand-deep);}
+.section-title{
+  font-size:17px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px;
+}
+.section-title .eyebrow{
+  font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--coral); font-weight:700;
+}
+
+/* Dashboard stat grid */
+.stat-grid{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px; margin-bottom:22px;
+}
+.stat-card{
+  background:#fff; border-radius:var(--radius); padding:16px 18px;
+  border:1px solid var(--line); box-shadow:var(--shadow);
+  position:relative; overflow:hidden;
+}
+[data-theme="dark"] .stat-card{background:var(--sand-deep);}
+.stat-card .stat-val{font-size:30px; font-weight:800; font-family:'Cormorant Garamond',serif; line-height:1;}
+.stat-card .stat-label{font-size:12.5px; opacity:.7; margin-top:6px; font-weight:500;}
+.stat-card .stat-bar{height:4px; border-radius:2px; margin-top:10px; background:var(--line); overflow:hidden;}
+.stat-card .stat-bar > div{height:100%; border-radius:2px;}
+
+/* Room board */
+.floor-block{margin-bottom:26px;}
+.floor-title{
+  font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  color:var(--lagoon); margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid var(--line);
+  display:flex; align-items:center; gap:8px;
+}
+[data-theme="dark"] .floor-title{color:var(--lagoon);}
+.room-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(130px,1fr)); gap:10px;
+}
+.room-card{
+  border-radius:12px; padding:12px; cursor:pointer; transition:.15s;
+  border:1px solid var(--line); position:relative; min-height:104px;
+  display:flex; flex-direction:column; justify-content:space-between;
+}
+.room-card:hover{transform:translateY(-2px); box-shadow:var(--shadow-lg);}
+.room-card .room-num{font-size:20px; font-weight:800; font-family:'Cormorant Garamond',serif;}
+.room-card .room-guest{font-size:12px; font-weight:600; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.room-card .room-meta{font-size:10.5px; opacity:.75; margin-top:2px;}
+.room-card .room-badge{
+  position:absolute; top:8px; left:8px; font-size:9.5px; font-weight:700;
+  padding:2px 7px; border-radius:6px; letter-spacing:.5px;
+}
+.room-card.status-available{background:var(--status-available-bg); border-color:var(--status-available);}
+.room-card.status-occupied{background:var(--status-occupied-bg); border-color:var(--status-occupied);}
+.room-card.status-reserved{background:var(--status-reserved-bg); border-color:var(--status-reserved);}
+.room-card.status-dirty{background:var(--status-dirty-bg); border-color:var(--status-dirty);}
+.room-card.status-oos{background:var(--status-oos-bg); border-color:var(--status-oos);}
+.room-card.status-maintenance{background:var(--status-maint-bg); border-color:var(--status-maint);}
+
+.status-available .room-badge{background:var(--status-available); color:#fff;}
+.status-occupied .room-badge{background:var(--status-occupied); color:#fff;}
+.status-reserved .room-badge{background:var(--status-reserved); color:#fff;}
+.status-dirty .room-badge{background:var(--status-dirty); color:#fff;}
+.status-oos .room-badge{background:var(--status-oos); color:#fff;}
+.status-maintenance .room-badge{background:var(--status-maint); color:#fff;}
+
+/* legend */
+.legend{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:18px; font-size:12.5px;}
+.legend-item{display:flex; align-items:center; gap:6px;}
+.legend-dot{width:12px; height:12px; border-radius:4px;}
+
+/* Buttons */
+.btn{
+  display:inline-flex; align-items:center; gap:8px; justify-content:center;
+  padding:10px 18px; border-radius:10px; border:none; cursor:pointer;
+  font-family:inherit; font-weight:700; font-size:14px; transition:.15s;
+}
+.btn-primary{background:var(--coral); color:#fff;}
+.btn-primary:hover{background:var(--coral-deep);}
+.btn-secondary{background:var(--lagoon); color:#fff;}
+.btn-secondary:hover{background:var(--lagoon-deep);}
+.btn-outline{background:transparent; border:1px solid var(--line); color:var(--ink);}
+.btn-outline:hover{background:var(--sand-deep);}
+.btn-ghost{background:transparent; border:none; color:var(--lagoon); padding:6px 10px;}
+.btn-sm{padding:7px 12px; font-size:12.5px;}
+.btn-danger{background:var(--status-oos); color:#fff;}
+.btn-block{width:100%;}
+.btn:disabled{opacity:.5; cursor:not-allowed;}
+
+/* forms */
+.form-group{margin-bottom:14px;}
+.form-group label{display:block; font-size:13px; font-weight:700; margin-bottom:6px;}
+.form-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+@media(max-width:560px){.form-row{grid-template-columns:1fr;}}
+input, select, textarea{
+  width:100%; padding:10px 12px; border-radius:9px; border:1px solid var(--line);
+  background:#fff; color:var(--ink); font-family:inherit; font-size:14px;
+}
+[data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea{background:var(--lagoon-deep); border-color:var(--line);}
+textarea{resize:vertical; min-height:70px;}
+input[type="file"]{padding:8px;}
+.checkbox-row{display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600;}
+.checkbox-row input{width:auto;}
+
+/* modal */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(18,30,30,.55); z-index:200;
+  display:flex; align-items:flex-end; justify-content:center;
+  backdrop-filter:blur(2px);
+}
+@media(min-width:700px){.modal-overlay{align-items:center;}}
+.modal{
+  background:var(--sand); border-radius:18px 18px 0 0; width:100%; max-width:560px;
+  max-height:92vh; overflow-y:auto; padding:22px; box-shadow:var(--shadow-lg);
+  animation:modalUp .25s ease;
+}
+@media(min-width:700px){.modal{border-radius:18px;}}
+@keyframes modalUp{from{transform:translateY(40px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+.modal-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;}
+.modal-header h2{font-size:18px; font-weight:800;}
+.modal-close{background:none; border:none; font-size:22px; cursor:pointer; color:var(--ink); line-height:1;}
+.modal-actions{display:flex; gap:10px; margin-top:18px;}
+
+/* badges/pills */
+.pill{display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:700;}
+.pill-available{background:var(--status-available-bg); color:var(--status-available);}
+.pill-occupied{background:var(--status-occupied-bg); color:var(--status-occupied);}
+.pill-reserved{background:var(--status-reserved-bg); color:var(--status-reserved);}
+.pill-dirty{background:var(--status-dirty-bg); color:var(--status-dirty);}
+.pill-oos{background:var(--status-oos-bg); color:var(--status-oos);}
+.pill-maintenance{background:var(--status-maint-bg); color:var(--status-maint);}
+.pill-open{background:var(--status-reserved-bg); color:var(--status-reserved);}
+.pill-inprogress{background:var(--status-occupied-bg); color:var(--status-occupied);}
+.pill-completed{background:var(--status-available-bg); color:var(--status-available);}
+
+/* table */
+.table-wrap{overflow-x:auto;}
+table{width:100%; border-collapse:collapse; font-size:13.5px;}
+th, td{padding:10px 12px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap;}
+th{font-weight:700; color:var(--lagoon); font-size:12.5px; text-transform:uppercase; letter-spacing:.5px;}
+[data-theme="dark"] th{color:var(--lagoon);}
+tbody tr:hover{background:var(--sand-deep);}
+
+/* tabs */
+.tabs{display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; padding-bottom:2px;}
+.tab{
+  padding:9px 16px; border-radius:10px; background:transparent; border:1px solid var(--line);
+  cursor:pointer; font-family:inherit; font-weight:700; font-size:13px; white-space:nowrap; color:var(--ink);
+}
+.tab.active{background:var(--lagoon); color:#fff; border-color:var(--lagoon);}
+
+/* empty state */
+.empty-state{text-align:center; padding:40px 20px; opacity:.6;}
+.empty-state .icon{font-size:40px; margin-bottom:10px;}
+
+/* activity log */
+.log-item{
+  display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:13px;
+}
+.log-item:last-child{border-bottom:none;}
+.log-time{opacity:.55; font-size:11.5px; white-space:nowrap;}
+.log-icon{font-size:16px;}
+
+/* calendar */
+.cal-wrap{overflow-x:auto;}
+.cal-grid{display:grid; min-width:fit-content;}
+.cal-row{display:grid; grid-template-columns:90px; align-items:stretch;}
+.cal-cell{
+  min-width:46px; height:38px; display:flex; align-items:center; justify-content:center;
+  font-size:11px; border:1px solid var(--line); font-weight:600;
+}
+.cal-room-label{
+  min-width:90px; position:sticky; right:0; background:var(--sand); z-index:5;
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px;
+  border:1px solid var(--line);
+}
+[data-theme="dark"] .cal-room-label{background:var(--sand-deep);}
+.cal-header-cell{
+  min-width:46px; height:46px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-size:10.5px; font-weight:700; border:1px solid var(--line); background:var(--sand-deep);
+}
+
+/* image preview thumbs */
+.photo-thumb{
+  width:100%; max-height:140px; object-fit:cover; border-radius:10px; margin-top:6px; border:1px solid var(--line);
+}
+.photo-row{display:flex; gap:10px; flex-wrap:wrap;}
+.photo-row > div{flex:1; min-width:120px;}
+
+/* toast */
+.toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  background:var(--lagoon-deep); color:#fff; padding:12px 22px; border-radius:30px;
+  font-size:13.5px; font-weight:600; box-shadow:var(--shadow-lg); z-index:300;
+  animation:toastIn .25s ease;
+}
+@keyframes toastIn{from{opacity:0; transform:translate(-50%,10px);} to{opacity:1; transform:translate(-50%,0);}}
+
+/* progress ring for occupancy */
+.occ-ring-wrap{display:flex; align-items:center; gap:20px;}
+.occ-ring{position:relative; width:96px; height:96px; flex-shrink:0;}
+.occ-ring svg{transform:rotate(-90deg);}
+.occ-ring .occ-val{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:800;
+}
+
+/* utilities */
+.flex{display:flex;}
+.flex-between{display:flex; justify-content:space-between; align-items:center;}
+.gap-8{gap:8px;} .gap-12{gap:12px;} .mb-12{margin-bottom:12px;} .mb-18{margin-bottom:18px;}
+.text-muted{opacity:.65; font-size:13px;}
+.text-sm{font-size:12.5px;}
+.text-center{text-align:center;}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media(max-width:700px){.grid-2{grid-template-columns:1fr;}}
+.scroll-x{overflow-x:auto;}
+hr.divider{border:none; border-top:1px solid var(--line); margin:16px 0;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+/* ============================================================
+   PLAYA LUXURY HOTEL — OPERATIONS SYSTEM
+   Single-file React-free vanilla JS app with localStorage
+   ============================================================ */
+const STORAGE_KEY = 'playa_hotel_os_v1';
+
+/* ---------------- SUPABASE (cloud sync) ---------------- */
+const SUPABASE_URL = 'https://caxzckmhiogmmzwazhmt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_r7rhss4MIFIowdXvK1ZxZw_JKEfEA1_';
+let supabaseClient = null;
+let supabaseChannel = null;
+let isSyncing = false; // true while applying a remote update (avoid feedback loop)
+let cloudSyncEnabled = false;
+
+try{
+  if(window.supabase){
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    cloudSyncEnabled = true;
+  }
+}catch(e){ console.warn('Supabase init failed, falling back to local storage', e); }
+
+
+const ROOM_LAYOUT = [
+  { floor:'الدور الأرضي', floorEn:'Ground Floor', section:'سي فيو', sectionEn:'Sea View', rooms:['101','102','103','104','105','106','107','108','109','110','111'] },
+  { floor:'الدور الأرضي', floorEn:'Ground Floor', section:'باك فيو', sectionEn:'Back View', rooms:['112','113','114','115','116','117','118','119','120','121','122'] },
+  { floor:'الدور الأول', floorEn:'First Floor', section:'سايد سي فيو', sectionEn:'Side Sea View', rooms:['201','202','203','204','205','206','207','208','209','210','211','212'] },
+  { floor:'الدور الأول', floorEn:'First Floor', section:'باك فيو', sectionEn:'Back View', rooms:['213','214','215','216','217','218','219','220','221'] },
+  { floor:'الدور الأول', floorEn:'First Floor', section:'سي فيو', sectionEn:'Sea View', rooms:['222'] },
+];
+
+const LIONS_LOGO = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAGQAZADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD6IoopwXI96oQU5RShaUCgYAUuKcBRQAAUuKACalUcUXAaqc808LSgUtIAxS0AZp22gBuDRjmpAtLtoAYBinYNPCilAoAZijbT9p9aXFADdtLjjinYooAbzS9KWlxQA2k2j0p54pKAG7R6UbR6U/FGPegBuMdqMU7FGKAG0U7FGKAGEZ6ik2in0UAM20hFSYpMUAR4NIRUm0+tDAdxQBDtpCD6VNtBprLigCLFJipCAaTbQBHgU1lHYVJSYoAgKkU3vU7CmFfamBFikIp560lAERGTzSVIRTSKAIjxSg4pSKaRigCQfSnCgUoFAAKdijFOA/OgAC08IKUCngUANApwFKKUD1pAIBSgHNPA9qeF4oAYFPpTwuKUCnYoASilooATFLS4oxQAlLilooASgUUtABRRRSAKTFLijFACUtGKMUAFFGKKACiiigBBzRilpKYBijFLRQA2ilNGKAEpCKdSUAN200rUlIRxQBER7U0rUxFNZaAISKTFSEe1NIoAiZRUZWpyPWmFRTQEJFIRTyPzpCKAIioprL6VLikNADhRRT0GRQAgHFSKKVRTgMUXAMUoGaUDNPFIBoFOA5pwHFOAxQAAUtKKKACilooAKKKWgAooopAFFLRQAmKWiigAooooAKKKKACiiigAooooAKKKKACiiigBKKWigBKKXFJQAUUUUwExSU6kxQAlJS0d6AGkUwipaaRxQBCRTSKmK0xqAIsUxhUuKa3tQBARSGpXGajIxTAcq81IBQBThSABTgKQCnqOlAABUgWlxS4oAAOKXFFKKAEpcUtFABRRRSAKMUtFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAGKTFLRQAlFLikoAKTFLRTAaaKWigBtMZakNJigCEimEVOwqMigCMioWBOanIxTSKAFHWlxQOtPoAAKkUUKvFOFABilopRQAUtFFABRRS0gExS0UUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABmjNYGr6Lf3ZZrDX9QsHPZEikT8mXP61wPiHRvijYq8uj+JINSQc+WYEikx7AgqfzralSjUdnNL1v/AJGNSrKH2W/Q9dpM18qXnxU8faPfSWep3Lw3MZw0dxaorD9KuWXxv8TLjzxazf8AbID+VekskxDV4tP5nC81pRdpRf8AXzPqCivALD47XW4C80+LHcop/wAa63SfjHo93tWdPKY/7eP/AEIAfrXPUyvFU94FxzXDS0bt6o9SorA0/wAV6Vexh459oPdhx/30Mj9a2oLiKdQ0MiSKe6nIrhlCUNJKx2wqwqK8GmSYopaKk0EpKWkNACUUoopgNNMK1IaSgCFh603HWpWFMIzQA0CpUFIFp4GBQAtLQKWgApaKKACiilpAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUZprMFGWOAPWgB1JkVyuuePfD+lOYXvftVyP+WNovmtn044H4muTvviJrN2CulaTBaRnpLeybm/74X/Guqlga9XWMdPPQ4q+Y4eh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wiVt2UUDwnbf3FrsNmKTZmj20+4vZR7HHnwnbf3RTT4Stv7orsSlIY6r20u4eyj2OPXwnbDqop3/AAitt/dFdYUo2Ue2l3D2Uexyn/CK239wflQfCtsD90flXV7KXy/aj20u4vZR7HKDwvbjooqVPDcA/hFdNso2+1L2su4/ZR7HOf8ACOwdlFOHh+AdAPyrogme1L5dHtWHs0c+NEhHYflTxo8QPQVubKPLpc7HyIyE0qMDjH5VMmmxjsPyrSCUoSp52PlRRWyUdv0qVbVf8irirjtT9oFLmHYqi2WpVt1FTAUtS2NIjESinCNafilpDE2j0owKWigAooooAKSlpKACiikNMApKKSgBgPNPqLNPU5oAfS00UtADqKSloAKWkopALRRRQAUUUUAFGKKKADFIBilooAQikp1FADcCkxT6KAGbaQrT8UYp3AZtNG2n4oxRcBm00bT3p9FFwGbaNtPoxRcBu2jbTsUYouA3bSbafijFFwGbaUD2p2KMUgExRinUUAJilxRRQAUUUUAFFFFABRQaSgAopCcUtABTaWkNMBCfSkJxQTimFqAIweakXrUVOU0ATigU1TTqAFpRTc0tADqKSloAKWkopALRSZpaACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKTNFABSGlpKAAUUUmaYBSGgmmM1AAxqNqUmmE5oAaDTgaiVs1IDQBIDTgaip4IoAlBzTs1EDTgfWgB9LTc0tAC0tNpaAFooopALRSUZoAWiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKTNFABmiiigAopKM0wCikzRmgAppNDN6UwmgBWNMJoJphOaACkNBpjNQBEDipEOaipynFMCcGlFRg04GkBIDTlOaipwOKAJlPNOqEGnhqAJM0U0GlFADqKSigB1FJRQAtFFFIBaKSigBaKTNLQAUUZooAKKKKACiiigAooooAKKKKACiikzQAtFJRQAuaSiigAoopKYXCjNFITQAUGgmkz60AFNY01jTS3agBxppNIWppNAATSGkJprNQApNRsaRmzTaYDQadkVCDTwaAJMmnh6iBpaAJwwp2agXrUoagB9OBpgNLSAlDU4NxUKmn5oAlBpaiDU4GgB9FIDRmgB1GaTNFADqKbS5oAWikzRQAtFFFIAozRRQMM0ZpKKBC5ooooGFFFFABRRSUxC0UmaM0ALSZpKM0ALSE4ozTT9aAFzRmkzTSaAFJxTS2aaTTc8UAOJppINJTWNADqYWppbHWmFs9qYAT+dITSUhNAC5pCaYTSZoAaKcDQfpSUAPBpwNRinCgB4NOVsUzpS0ASB+aeDmoKduoAnzSg1CGpwb1pAShqUNmo804UAShjTg3FQZPrSg+tAE4xQGqMNS5oAkLe1Lnios0bvWgCUUZpgPalz6UAOpc02jOOtADs0ZpoINLmgBc0Zpu4etGcUAOzRmm7hRnPSgB2aSm7h60uaAFopv0pN2DQA+kzTd1IW9KAH0hOKZk0hPrQA8tTdxppPFNY+lADiwppakpM0ALSE0hNMYn1oAcTTC9JupmeaYCk5pKKQ0AITTSaCaaaAAmikzninDpQI//Z';
+
+const USERS = [
+  { id:'ahmed', name:'أحمد مجدي', nameEn:'Ahmed Magdy', role:'admin', roleLabel:'مدير عام', roleLabelEn:'Admin', password:'2311' },
+  { id:'islam', name:'د. اسلام ناصر', nameEn:'Dr. Islam Nasser', role:'admin', roleLabel:'المالك', roleLabelEn:'Owner', password:'1212', isOwner:true },
+  { id:'tarek', name:'طارق', nameEn:'Tarek', role:'manager', roleLabel:'مدير العمليات', roleLabelEn:'Manager', password:'2909' },
+  { id:'adel', name:'عادل', nameEn:'Adel', role:'reception', roleLabel:'استقبال', roleLabelEn:'Reception', password:'1111' },
+];
+
+const SOURCES = ['Lions Travel','Direct','Booking.com','WhatsApp','Walk-In','Corporate','Other'];
+const SOURCES_AR = { 'Lions Travel':'لايونز ترافيل','Direct':'مباشر','Booking.com':'بوكينج','WhatsApp':'واتساب','Walk-In':'حجز مباشر بالفندق','Corporate':'شركات','Other':'أخرى' };
+
+const EXPENSE_CATEGORIES = [
+  { en:'Salaries', ar:'رواتب' },
+  { en:'Advances', ar:'سلف' },
+  { en:'Cleaning Supplies', ar:'مستلزمات تنظيف' },
+  { en:'Maintenance', ar:'صيانة' },
+  { en:'Utilities', ar:'مرافق (كهرباء/مياه)' },
+  { en:'Development & Improvements', ar:'تطوير وتحسينات' },
+  { en:'Kitchen Purchases', ar:'مشتريات المطبخ' },
+  { en:'Bar Purchases', ar:'مشتريات البار' },
+  { en:'Swimming Pool', ar:'حمام السباحة' },
+  { en:'Cinema Dahab', ar:'سينما دهب' },
+];
+
+const STATUS_META = {
+  available:   { ar:'متاحة',   en:'Available',     cls:'available',   pill:'pill-available' },
+  occupied:    { ar:'مشغولة',  en:'Occupied',      cls:'occupied',    pill:'pill-occupied' },
+  reserved:    { ar:'محجوزة',  en:'Reserved',      cls:'reserved',    pill:'pill-reserved' },
+  dirty:       { ar:'تحتاج تنظيف', en:'Dirty',     cls:'dirty',       pill:'pill-dirty' },
+  oos:         { ar:'خارج الخدمة', en:'Out of Service', cls:'oos',     pill:'pill-oos' },
+  maintenance: { ar:'صيانة',   en:'Maintenance',   cls:'maintenance', pill:'pill-maintenance' },
+};
+
+const TICKET_STATUS_META = {
+  open:       { ar:'مفتوحة', en:'Open', pill:'pill-open' },
+  inprogress: { ar:'قيد التنفيذ', en:'In Progress', pill:'pill-inprogress' },
+  completed:  { ar:'مكتملة', en:'Completed', pill:'pill-completed' },
+};
+
+const PRIORITY_META = {
+  high:   { ar:'عاجل', en:'High' },
+  medium: { ar:'متوسط', en:'Medium' },
+  low:    { ar:'منخفض', en:'Low' },
+};
+
+/* ---------------- STATE ---------------- */
+let state = loadState();
+let currentUser = null;
+let currentView = 'dashboard';
+let lang = state.settings.lang || 'ar';
+let theme = state.settings.theme || 'light';
+let sidebarOpen = false;
+let activeRoomDetail = null; // room number
+let activeModal = null; // {type, data}
+let calRange = 7;
+
+function defaultState(){
+  const rooms = {};
+  ROOM_LAYOUT.forEach(block=>{
+    block.rooms.forEach(num=>{
+      rooms[num] = {
+        number:num,
+        floor:block.floor, floorEn:block.floorEn,
+        section:block.section, sectionEn:block.sectionEn,
+        status:'available',
+        guest:null, // {name, count, arrival, departure, breakfast, source, notes}
+        history:[], // [{type, text, textEn, ts}]
+      };
+    });
+  });
+  return {
+    rooms,
+    reservations: [], // future reservations not yet checked in
+    maintenance: [],
+    expenses: [],
+    activityLog: [],
+    employees: [], // {id, name, baseSalary, advances:[{date,amount,note}], details:[{date,amount,note}], notes}
+    userPasswords: { ahmed:'2311', islam:'1212', tarek:'2909', adel:'1111' },
+    settings:{ lang:'ar', theme:'light' }
+  };
+}
+
+function normalizeState(parsed){
+  const def = defaultState();
+  if(!parsed) return def;
+  Object.keys(def.rooms).forEach(num=>{
+    if(!parsed.rooms || !parsed.rooms[num]) {
+      if(!parsed.rooms) parsed.rooms = {};
+      parsed.rooms[num] = def.rooms[num];
+    }
+  });
+  if(!parsed.settings) parsed.settings = {lang:'ar', theme:'light'};
+  if(!parsed.reservations) parsed.reservations=[];
+  if(!parsed.maintenance) parsed.maintenance=[];
+  if(!parsed.expenses) parsed.expenses=[];
+  if(!parsed.activityLog) parsed.activityLog=[];
+  if(!parsed.employees) parsed.employees=[];
+  if(!parsed.userPasswords) parsed.userPasswords = {...def.userPasswords};
+  USERS.forEach(u=>{ if(!(u.id in parsed.userPasswords)) parsed.userPasswords[u.id] = u.password; });
+  return parsed;
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    return normalizeState(parsed);
+  }catch(e){ return defaultState(); }
+}
+
+let saveDebounceTimer = null;
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if(cloudSyncEnabled && !isSyncing){
+    clearTimeout(saveDebounceTimer);
+    saveDebounceTimer = setTimeout(pushStateToCloud, 400);
+  }
+}
+
+async function pushStateToCloud(){
+  if(!supabaseClient) return;
+  try{
+    await supabaseClient
+      .from('hotel_state')
+      .update({ data: state, updated_at: new Date().toISOString() })
+      .eq('id', 1);
+  }catch(e){ console.warn('Cloud sync push failed', e); }
+}
+
+async function pullStateFromCloud(){
+  if(!supabaseClient) return null;
+  try{
+    const { data, error } = await supabaseClient
+      .from('hotel_state')
+      .select('data')
+      .eq('id', 1)
+      .single();
+    if(error) throw error;
+    if(data && data.data) return data.data;
+    return null;
+  }catch(e){ console.warn('Cloud sync pull failed', e); return null; }
+}
+
+function subscribeToCloud(){
+  if(!supabaseClient) return;
+  supabaseChannel = supabaseClient
+    .channel('hotel_state_changes')
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'hotel_state', filter:'id=eq.1' }, (payload)=>{
+      if(!payload.new || !payload.new.data) return;
+      isSyncing = true;
+      try{
+        state = normalizeState(payload.new.data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        // preserve local-only navigation state, just re-render
+        render();
+      } finally {
+        isSyncing = false;
+      }
+    })
+    .subscribe();
+}
+
+async function initCloudSync(){
+  if(!supabaseClient) return;
+  const cloudData = await pullStateFromCloud();
+  if(cloudData && Object.keys(cloudData).length>0){
+    isSyncing = true;
+    state = normalizeState(cloudData);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    isSyncing = false;
+    render();
+  } else {
+    // seed cloud with current local state
+    pushStateToCloud();
+  }
+  subscribeToCloud();
+}
+
+function persistSettings(){
+  state.settings.lang = lang;
+  state.settings.theme = theme;
+  saveState();
+}
+
+
+/* ---------------- HELPERS ---------------- */
+function t(ar, en){ return lang==='ar' ? ar : en; }
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+function fmtDate(d){
+  if(!d) return '—';
+  const date = new Date(d);
+  if(isNaN(date)) return d;
+  return date.toLocaleDateString(lang==='ar'?'ar-EG':'en-GB', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+
+function fmtDateTime(ts){
+  const d = new Date(ts);
+  return d.toLocaleString(lang==='ar'?'ar-EG':'en-GB', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+
+function todayStr(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function addDays(dateStr, n){
+  const d = new Date(dateStr);
+  d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
+}
+
+function logActivity(text, textEn, icon='📝'){
+  state.activityLog.unshift({
+    id:uid(), ts:Date.now(), text, textEn, icon,
+    user: currentUser ? (lang==='ar'? currentUser.name : currentUser.nameEn) : '—',
+    userName: currentUser ? currentUser.name : '—',
+    userNameEn: currentUser ? currentUser.nameEn : '—',
+  });
+  if(state.activityLog.length>300) state.activityLog.length=300;
+}
+
+function roomHistoryPush(roomNum, entry){
+  state.rooms[roomNum].history.unshift({ id:uid(), ts:Date.now(), ...entry });
+}
+
+function showToast(msg){
+  const el = document.createElement('div');
+  el.className='toast';
+  el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 2400);
+}
+
+function fileToDataUrl(file){
+  return new Promise((res)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>res(reader.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---------------- PERMISSIONS ---------------- */
+const NAV_ITEMS = [
+  { id:'dashboard', icon:'📊', ar:'لوحة التحكم', en:'Dashboard', roles:['admin','manager','reception'] },
+  { id:'roomboard', icon:'🛏️', ar:'لوحة الغرف', en:'Room Board', roles:['admin','manager','reception'] },
+  { id:'reservations', icon:'📅', ar:'الحجوزات', en:'Reservations', roles:['admin','manager','reception'] },
+  { id:'calendar', icon:'🗓️', ar:'تقويم التوفر', en:'Availability Calendar', roles:['admin','manager','reception'] },
+  { id:'maintenance', icon:'🛠️', ar:'الصيانة', en:'Maintenance', roles:['admin','manager','reception'] },
+  { id:'expenses', icon:'💰', ar:'المصروفات', en:'Expenses', roles:['admin','manager','reception'] },
+  { id:'reports', icon:'📋', ar:'التقارير اليومية', en:'Daily Reports', roles:['admin','manager'] },
+  { id:'employees', icon:'👥', ar:'الموظفين', en:'Employees', roles:['admin','manager'] },
+  { id:'activity', icon:'🕒', ar:'سجل النشاط', en:'Activity Log', roles:['admin','manager'] },
+  { id:'settings', icon:'⚙️', ar:'الإعدادات', en:'Settings', roles:['admin'] },
+];
+
+function canAccess(viewId){
+  if(!currentUser) return false;
+  if(viewId==='settings') return !!currentUser.isOwner || currentUser.id==='ahmed';
+  const item = NAV_ITEMS.find(n=>n.id===viewId);
+  if(!item) return true;
+  return item.roles.includes(currentUser.role);
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function render(){
+  const app = document.getElementById('app');
+  document.documentElement.setAttribute('dir', lang==='ar'?'rtl':'ltr');
+  document.documentElement.setAttribute('lang', lang);
+  document.body.setAttribute('data-theme', theme);
+
+  if(!currentUser){
+    app.innerHTML = renderLogin();
+    bindLogin();
+    return;
+  }
+
+  if(!canAccess(currentView)) currentView='dashboard';
+
+  app.innerHTML = `
+    <div class="sidebar-overlay ${sidebarOpen?'show':''}" id="overlay"></div>
+    <div class="sidebar ${sidebarOpen?'open':''}" id="sidebar">
+      ${renderSidebar()}
+    </div>
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <h1>${t(NAV_ITEMS.find(n=>n.id===currentView)?.ar || 'بلايا', NAV_ITEMS.find(n=>n.id===currentView)?.en || 'Playa')}</h1>
+        </div>
+        <div class="topbar-actions">
+          ${cloudSyncEnabled ? `<span class="text-sm text-muted" title="${t('متصل بالسحابة - تحديث لحظي','Connected - Live Sync')}" style="display:flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:var(--status-available); display:inline-block;"></span>${t('مباشر','Live')}</span>` : ''}
+          <button class="icon-btn lang-toggle" id="langToggle">${lang==='ar'?'EN':'AR'}</button>
+          <button class="icon-btn" id="themeToggle">${theme==='light'?'🌙':'☀️'}</button>
+        </div>
+      </div>
+      <div class="content" id="content"></div>
+    </div>
+    ${activeModal ? renderModal() : ''}
+  `;
+
+  document.getElementById('content').innerHTML = renderView();
+
+  bindGlobal();
+  bindView();
+  if(activeModal) bindModal();
+}
+
+/* ---------------- LOGIN ---------------- */
+let loginSelectedUser = null;
+let loginError = false;
+
+function renderLogin(){
+  if(!loginSelectedUser){
+    return `
+    <div class="login-wrap">
+      <div class="login-logo-panel">
+        <img src="${LIONS_LOGO}" alt="Lions Travel" class="login-logo-img">
+      </div>
+      <div class="login-card">
+        <div class="logo-mark serif">PLAYA</div>
+        <div class="logo-sub">Luxury Hotel · Dahab</div>
+        <div class="login-users">
+          ${USERS.map(u=>`
+            <button class="login-user-btn" data-user="${u.id}">
+              <div class="user-avatar">${(lang==='ar'?u.name:u.nameEn)[0]}</div>
+              <div>
+                <div class="name">${lang==='ar'?u.name:u.nameEn}</div>
+                <div class="role">${lang==='ar'?u.roleLabel:u.roleLabelEn}</div>
+              </div>
+            </button>
+          `).join('')}
+        </div>
+        <div style="margin-top:20px;">
+          <button class="icon-btn lang-toggle" id="loginLangToggle" style="margin:0 auto;">${lang==='ar'?'EN':'AR'}</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // password step
+  const u = loginSelectedUser;
+  return `
+  <div class="login-wrap">
+    <div class="login-logo-panel">
+      <img src="${LIONS_LOGO}" alt="Lions Travel" class="login-logo-img">
+    </div>
+    <div class="login-card">
+      <div class="logo-mark serif">PLAYA</div>
+      <div class="logo-sub">Luxury Hotel · Dahab</div>
+      <div class="user-chip" style="justify-content:center; margin:18px 0;">
+        <div class="user-avatar">${(lang==='ar'?u.name:u.nameEn)[0]}</div>
+        <div class="user-meta">
+          <div class="name">${lang==='ar'?u.name:u.nameEn}</div>
+          <div class="role">${lang==='ar'?u.roleLabel:u.roleLabelEn}</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>${t('كلمة المرور','Password')}</label>
+        <input type="password" id="loginPassword" inputmode="numeric" autofocus>
+        ${loginError ? `<div style="color:var(--status-oos); font-size:12.5px; margin-top:6px;">${t('كلمة مرور غير صحيحة','Incorrect password')}</div>` : ''}
+      </div>
+      <div class="flex gap-8">
+        <button class="btn btn-outline btn-block" id="loginBackBtn">${t('رجوع','Back')}</button>
+        <button class="btn btn-primary btn-block" id="loginSubmitBtn">${t('دخول','Login')}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function bindLogin(){
+  if(!loginSelectedUser){
+    document.querySelectorAll('.login-user-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        loginSelectedUser = USERS.find(u=>u.id===btn.dataset.user);
+        loginError=false;
+        render();
+      };
+    });
+    const lt = document.getElementById('loginLangToggle');
+    if(lt) lt.onclick = ()=>{ lang = lang==='ar'?'en':'ar'; persistSettings(); render(); };
+    return;
+  }
+
+  const submit = ()=>{
+    const val = document.getElementById('loginPassword').value;
+    const correct = state.userPasswords[loginSelectedUser.id];
+    if(val === correct){
+      currentUser = loginSelectedUser;
+      currentView='dashboard';
+      logActivity(
+        `${currentUser.name} سجل دخول`,
+        `${currentUser.nameEn} logged in`,
+        '🔑'
+      );
+      loginSelectedUser=null; loginError=false;
+      saveState();
+      render();
+    } else {
+      loginError=true;
+      render();
+    }
+  };
+
+  document.getElementById('loginSubmitBtn').onclick = submit;
+  const pwInput = document.getElementById('loginPassword');
+  pwInput.onkeydown = (e)=>{ if(e.key==='Enter') submit(); };
+  pwInput.focus();
+
+  document.getElementById('loginBackBtn').onclick = ()=>{
+    loginSelectedUser=null; loginError=false; render();
+  };
+}
+
+/* ---------------- SIDEBAR ---------------- */
+function renderSidebar(){
+  const items = NAV_ITEMS.filter(n=>canAccess(n.id));
+  return `
+    <div class="sidebar-brand">
+      <div class="logo-mark serif">PLAYA</div>
+      <div class="logo-sub">${t('فندق دهب الفاخر','Luxury Hotel · Dahab')}</div>
+    </div>
+    <div class="sidebar-nav">
+      ${items.map(item=>`
+        <div class="nav-item ${currentView===item.id?'active':''}" data-view="${item.id}">
+          <span class="icon">${item.icon}</span>
+          <span>${t(item.ar, item.en)}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar">${(lang==='ar'?currentUser.name:currentUser.nameEn)[0]}</div>
+        <div class="user-meta">
+          <div class="name">${lang==='ar'?currentUser.name:currentUser.nameEn}</div>
+          <div class="role">${lang==='ar'?currentUser.roleLabel:currentUser.roleLabelEn}</div>
+        </div>
+      </div>
+      <button class="logout-btn" id="logoutBtn">${t('تسجيل الخروج','Log out')}</button>
+    </div>
+  `;
+}
+
+/* ---------------- GLOBAL BINDINGS ---------------- */
+function bindGlobal(){
+  const menuToggle = document.getElementById('menuToggle');
+  if(menuToggle) menuToggle.onclick = ()=>{ sidebarOpen=true; render(); };
+  const overlay = document.getElementById('overlay');
+  if(overlay) overlay.onclick = ()=>{ sidebarOpen=false; render(); };
+
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.onclick = ()=>{
+      currentView = el.dataset.view;
+      sidebarOpen=false;
+      activeRoomDetail=null;
+      employeeDetailId=null;
+      render();
+    };
+  });
+
+  const logoutBtn = document.getElementById('logoutBtn');
+  if(logoutBtn) logoutBtn.onclick = ()=>{
+    logActivity(`${currentUser.name} سجل خروج`, `${currentUser.nameEn} logged out`, '🔒');
+    saveState();
+    currentUser=null;
+    render();
+  };
+
+  const langToggle = document.getElementById('langToggle');
+  if(langToggle) langToggle.onclick = ()=>{ lang = lang==='ar'?'en':'ar'; persistSettings(); render(); };
+
+  const themeToggle = document.getElementById('themeToggle');
+  if(themeToggle) themeToggle.onclick = ()=>{ theme = theme==='light'?'dark':'light'; persistSettings(); render(); };
+}
+
+/* ---------------- VIEW ROUTER ---------------- */
+function renderView(){
+  if(activeRoomDetail) return renderRoomDetail(activeRoomDetail);
+  switch(currentView){
+    case 'dashboard': return renderDashboard();
+    case 'roomboard': return renderRoomBoard();
+    case 'reservations': return renderReservations();
+    case 'calendar': return renderCalendar();
+    case 'maintenance': return renderMaintenance();
+    case 'expenses': return renderExpenses();
+    case 'reports': return renderReports();
+    case 'activity': return renderActivityLog();
+    case 'employees': return renderEmployees();
+    case 'settings': return renderSettings();
+    default: return renderDashboard();
+  }
+}
+
+function bindView(){
+  if(activeRoomDetail) return bindRoomDetail();
+  switch(currentView){
+    case 'dashboard': return bindDashboard();
+    case 'roomboard': return bindRoomBoard();
+    case 'reservations': return bindReservations();
+    case 'calendar': return bindCalendar();
+    case 'maintenance': return bindMaintenance();
+    case 'expenses': return bindExpenses();
+    case 'reports': return bindReports();
+    case 'activity': return bindActivityLog();
+    case 'employees': return bindEmployees();
+    case 'settings': return bindSettings();
+  }
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function getRoomCounts(){
+  const counts = { available:0, occupied:0, reserved:0, dirty:0, oos:0, maintenance:0 };
+  Object.values(state.rooms).forEach(r=>{ counts[r.status]++; });
+  return counts;
+}
+
+function getOpenMaintenanceCount(){
+  return state.maintenance.filter(m=>m.status!=='completed').length;
+}
+
+function getTodayExpensesTotal(){
+  const today = todayStr();
+  return state.expenses.filter(e=>e.date===today).reduce((s,e)=>s+Number(e.amount||0),0);
+}
+
+function getBreakfastForecast(forDate){
+  // Count occupied rooms with breakfast included that won't have departed by `forDate`,
+  // plus reservations arriving on/before forDate and departing after forDate with breakfast.
+  let count=0;
+  Object.values(state.rooms).forEach(r=>{
+    if(r.status==='occupied' && r.guest && r.guest.breakfast){
+      if(!r.guest.departure || r.guest.departure > forDate){
+        count += Number(r.guest.count||1);
+      }
+    }
+  });
+  state.reservations.forEach(res=>{
+    if(res.breakfast && res.arrival <= forDate && res.departure > forDate){
+      count += Number(res.guestCount||1);
+    }
+  });
+  return count;
+}
+
+function renderDashboard(){
+  const counts = getRoomCounts();
+  const total = Object.keys(state.rooms).length;
+  const occPct = Math.round((counts.occupied/total)*100);
+  const tomorrow = addDays(todayStr(),1);
+  const breakfastCount = getBreakfastForecast(tomorrow);
+  const openTickets = getOpenMaintenanceCount();
+  const todayExpenses = getTodayExpensesTotal();
+
+  const stats = [
+    { label:t('غرف مشغولة','Occupied Rooms'), val:counts.occupied, color:'var(--status-occupied)', pct:(counts.occupied/total)*100 },
+    { label:t('غرف متاحة','Available Rooms'), val:counts.available, color:'var(--status-available)', pct:(counts.available/total)*100 },
+    { label:t('غرف محجوزة','Reserved Rooms'), val:counts.reserved, color:'var(--status-reserved)', pct:(counts.reserved/total)*100 },
+    { label:t('غرف تحتاج تنظيف','Dirty Rooms'), val:counts.dirty, color:'var(--status-dirty)', pct:(counts.dirty/total)*100 },
+    { label:t('خارج الخدمة','Out of Service'), val:counts.oos, color:'var(--status-oos)', pct:(counts.oos/total)*100 },
+    { label:t('غرف صيانة','Maintenance Rooms'), val:counts.maintenance, color:'var(--status-maint)', pct:(counts.maintenance/total)*100 },
+  ];
+
+  return `
+    <div class="stat-grid">
+      ${stats.map(s=>`
+        <div class="stat-card">
+          <div class="stat-val">${s.val}</div>
+          <div class="stat-label">${s.label}</div>
+          <div class="stat-bar"><div style="width:${s.pct}%; background:${s.color};"></div></div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">
+          <span class="eyebrow">${t('نسبة الإشغال','Occupancy')}</span>
+        </div>
+        <div class="occ-ring-wrap">
+          <div class="occ-ring">
+            <svg width="96" height="96" viewBox="0 0 96 96">
+              <circle cx="48" cy="48" r="42" fill="none" stroke="var(--line)" stroke-width="10"/>
+              <circle cx="48" cy="48" r="42" fill="none" stroke="var(--coral)" stroke-width="10"
+                stroke-dasharray="${2*Math.PI*42}" stroke-dashoffset="${2*Math.PI*42*(1-occPct/100)}" stroke-linecap="round"/>
+            </svg>
+            <div class="occ-val">${occPct}%</div>
+          </div>
+          <div>
+            <div style="font-size:14px; font-weight:700;">${counts.occupied} / ${total} ${t('غرفة','rooms')}</div>
+            <div class="text-muted">${t('إجمالي غرف الفندق', 'Total hotel rooms')}: ${total}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <span class="eyebrow">${t('نظرة سريعة','Quick Overview')}</span>
+        </div>
+        <div class="flex-between mb-12">
+          <span>🥐 ${t('إفطار الغد المتوقع','Tomorrow Breakfast Count')}</span>
+          <strong>${breakfastCount}</strong>
+        </div>
+        <div class="flex-between mb-12">
+          <span>🛠️ ${t('تذاكر صيانة مفتوحة','Open Maintenance Tickets')}</span>
+          <strong>${openTickets}</strong>
+        </div>
+        <div class="flex-between">
+          <span>💰 ${t('مصروفات اليوم','Today\'s Expenses')}</span>
+          <strong>${todayExpenses.toLocaleString()} ${t('ج.م','EGP')}</strong>
+        </div>
+      </div>
+    </div>
+
+    ${currentUser.role!=='reception' ? `
+    <div class="card" style="margin-top:18px;">
+      <div class="section-title">
+        <span class="eyebrow">${t('آخر النشاطات','Recent Activity')}</span>
+      </div>
+      ${state.activityLog.slice(0,6).map(a=>`
+        <div class="log-item">
+          <span class="log-icon">${a.icon}</span>
+          <div style="flex:1;">
+            <div>${lang==='ar'?a.text:(a.textEn||a.text)}</div>
+          </div>
+          <span class="log-time">${fmtDateTime(a.ts)}</span>
+        </div>
+      `).join('') || `<div class="empty-state"><div class="icon">🌊</div><div>${t('لا يوجد نشاط بعد','No activity yet')}</div></div>`}
+    </div>
+    ` : ''}
+  `;
+}
+
+function bindDashboard(){}
+
+/* ============================================================
+   ROOM BOARD
+   ============================================================ */
+function renderRoomBoard(){
+  const legendItems = Object.entries(STATUS_META).map(([key,meta])=>`
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--status-${key==='oos'?'oos':key});"></div>
+      <span>${t(meta.ar, meta.en)}</span>
+    </div>
+  `).join('');
+
+  // group by floor+section preserving ROOM_LAYOUT order
+  const blocks = ROOM_LAYOUT.map(block=>{
+    const cards = block.rooms.map(num=>renderRoomCard(state.rooms[num])).join('');
+    return `
+      <div class="floor-block">
+        <div class="floor-title">🏨 ${t(block.floor,block.floorEn)} — ${t(block.section,block.sectionEn)}</div>
+        <div class="room-grid">${cards}</div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="legend">${legendItems}</div>
+    ${blocks}
+  `;
+}
+
+function renderRoomCard(room){
+  const meta = STATUS_META[room.status];
+  const guest = room.guest;
+  return `
+    <div class="room-card status-${meta.cls}" data-room="${room.number}">
+      <div class="room-badge">${t(meta.ar, meta.en)}</div>
+      <div>
+        <div class="room-num">${room.number}</div>
+        ${guest ? `<div class="room-guest">${guest.name}</div>` : ''}
+      </div>
+      <div class="room-meta">
+        ${guest ? `
+          ${t('مغادرة','Out')}: ${fmtDate(guest.departure)}<br>
+          ${guest.count||1} ${t('ضيف','guest')} · ${SOURCES_AR[guest.source]||guest.source||''}
+        ` : t('متاحة الآن','Available now')}
+      </div>
+    </div>
+  `;
+}
+
+function bindRoomBoard(){
+  document.querySelectorAll('.room-card').forEach(el=>{
+    el.onclick = ()=>{ activeRoomDetail = el.dataset.room; render(); };
+  });
+}
+
+/* ============================================================
+   ROOM DETAIL
+   ============================================================ */
+function renderRoomDetail(num){
+  const room = state.rooms[num];
+  const meta = STATUS_META[room.status];
+  const guest = room.guest;
+
+  return `
+    <button class="btn btn-ghost mb-12" id="backBtn">${t('→ رجوع للوحة الغرف','→ Back to Room Board')}</button>
+
+    <div class="card mb-18">
+      <div class="flex-between mb-12">
+        <div>
+          <div style="font-size:13px; opacity:.6;">${t(room.floor,room.floorEn)} · ${t(room.section,room.sectionEn)}</div>
+          <div class="serif" style="font-size:34px; font-weight:800;">${room.number}</div>
+        </div>
+        <span class="pill ${meta.pill}">${t(meta.ar,meta.en)}</span>
+      </div>
+
+      ${guest ? `
+        <hr class="divider">
+        <div class="grid-2">
+          <div>
+            <div class="text-muted">${t('اسم الضيف','Guest Name')}</div>
+            <div style="font-weight:700;">${guest.name}</div>
+          </div>
+          <div>
+            <div class="text-muted">${t('عدد الضيوف','Guest Count')}</div>
+            <div style="font-weight:700;">${guest.count||1}</div>
+          </div>
+          <div>
+            <div class="text-muted">${t('تاريخ الوصول','Arrival')}</div>
+            <div style="font-weight:700;">${fmtDate(guest.arrival)}</div>
+          </div>
+          <div>
+            <div class="text-muted">${t('تاريخ المغادرة','Departure')}</div>
+            <div style="font-weight:700;">${fmtDate(guest.departure)}</div>
+          </div>
+          <div>
+            <div class="text-muted">${t('الإفطار','Breakfast')}</div>
+            <div style="font-weight:700;">${guest.breakfast ? t('✔ مشمول','✔ Included') : t('✘ غير مشمول','✘ Not included')}</div>
+          </div>
+          <div>
+            <div class="text-muted">${t('مصدر الحجز','Source')}</div>
+            <div style="font-weight:700;">${SOURCES_AR[guest.source]||guest.source||'—'}</div>
+          </div>
+        </div>
+        ${guest.notes ? `<div style="margin-top:10px;"><div class="text-muted">${t('ملاحظات','Notes')}</div><div>${guest.notes}</div></div>`:''}
+      ` : `<div class="text-muted">${t('لا يوجد ضيف حالياً في هذه الغرفة','No guest currently in this room')}</div>`}
+
+      <hr class="divider">
+
+      <div class="flex gap-8" style="flex-wrap:wrap;">
+        ${room.status==='available' ? `<button class="btn btn-primary" id="checkInBtn">${t('تسجيل دخول','Check-In')}</button>` : ''}
+        ${room.status==='occupied' ? `
+          <button class="btn btn-secondary" id="checkOutBtn">${t('تسجيل خروج (تحويل لتنظيف)','Check-Out (mark Dirty)')}</button>
+          <button class="btn btn-outline" id="roomChangeBtn">${t('تغيير الغرفة','Room Change')}</button>
+        ` : ''}
+        ${room.status==='dirty' ? `<button class="btn btn-primary" id="cleanDoneBtn">${t('التنظيف انتهى → متاحة','Cleaning Done → Available')}</button>` : ''}
+        ${room.status==='maintenance' || room.status==='oos' ? `<button class="btn btn-primary" id="restoreBtn">${t('إعادة الغرفة للخدمة → متاحة','Restore Room → Available')}</button>` : ''}
+        ${room.status!=='maintenance' && room.status!=='oos' ? `<button class="btn btn-danger" id="setOosBtn">${t('وضع خارج الخدمة','Set Out of Service')}</button>` : ''}
+        <button class="btn btn-outline" id="newTicketBtn">${t('🛠️ فتح تذكرة صيانة','🛠️ New Maintenance Ticket')}</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><span class="eyebrow">${t('سجل الغرفة الكامل','Room History')}</span></div>
+      ${room.history.length ? room.history.map(h=>`
+        <div class="log-item">
+          <span class="log-icon">${h.icon||'•'}</span>
+          <div style="flex:1;">${lang==='ar'?h.text:(h.textEn||h.text)}</div>
+          <span class="log-time">${fmtDateTime(h.ts)}</span>
+        </div>
+      `).join('') : `<div class="empty-state"><div class="icon">📜</div><div>${t('لا يوجد سجل بعد','No history yet')}</div></div>`}
+    </div>
+  `;
+}
+
+function bindRoomDetail(){
+  document.getElementById('backBtn').onclick = ()=>{ activeRoomDetail=null; render(); };
+
+  const checkInBtn = document.getElementById('checkInBtn');
+  if(checkInBtn) checkInBtn.onclick = ()=>{ activeModal={type:'checkin', room:activeRoomDetail}; render(); };
+
+  const checkOutBtn = document.getElementById('checkOutBtn');
+  if(checkOutBtn) checkOutBtn.onclick = ()=>{ activeModal={type:'checkout', room:activeRoomDetail}; render(); };
+
+  const roomChangeBtn = document.getElementById('roomChangeBtn');
+  if(roomChangeBtn) roomChangeBtn.onclick = ()=>{ activeModal={type:'roomchange', room:activeRoomDetail}; render(); };
+
+  const cleanDoneBtn = document.getElementById('cleanDoneBtn');
+  if(cleanDoneBtn) cleanDoneBtn.onclick = ()=>{
+    const room = state.rooms[activeRoomDetail];
+    room.status='available';
+    roomHistoryPush(room.number, {type:'status', text:'تم الانتهاء من التنظيف، الغرفة متاحة الآن', textEn:'Cleaning completed, room is now available', icon:'✨'});
+    logActivity(`تم تنظيف الغرفة ${room.number} وأصبحت متاحة`, `Room ${room.number} cleaned and made available`, '✨');
+    saveState(); showToast(t('تم تحديث الحالة','Status updated')); render();
+  };
+
+  const restoreBtn = document.getElementById('restoreBtn');
+  if(restoreBtn) restoreBtn.onclick = ()=>{
+    const room = state.rooms[activeRoomDetail];
+    room.status='available';
+    roomHistoryPush(room.number, {type:'status', text:'تمت إعادة الغرفة للخدمة', textEn:'Room restored to service', icon:'✅'});
+    logActivity(`تمت إعادة الغرفة ${room.number} للخدمة`, `Room ${room.number} restored to service`, '✅');
+    saveState(); showToast(t('تم التحديث','Updated')); render();
+  };
+
+  const setOosBtn = document.getElementById('setOosBtn');
+  if(setOosBtn) setOosBtn.onclick = ()=>{
+    const room = state.rooms[activeRoomDetail];
+    room.status='oos';
+    roomHistoryPush(room.number, {type:'status', text:'تم وضع الغرفة خارج الخدمة', textEn:'Room set Out of Service', icon:'⛔'});
+    logActivity(`الغرفة ${room.number} أصبحت خارج الخدمة`, `Room ${room.number} set Out of Service`, '⛔');
+    saveState(); showToast(t('تم التحديث','Updated')); render();
+  };
+
+  const newTicketBtn = document.getElementById('newTicketBtn');
+  if(newTicketBtn) newTicketBtn.onclick = ()=>{ activeModal={type:'newticket', room:activeRoomDetail}; render(); };
+}
+
+/* ============================================================
+   RESERVATIONS
+   ============================================================ */
+let reservationsTab = 'upcoming';
+
+function renderReservations(){
+  const upcoming = [...state.reservations].sort((a,b)=>a.arrival.localeCompare(b.arrival));
+
+  return `
+    <div class="flex-between mb-18" style="flex-wrap:wrap; gap:10px;">
+      <div class="tabs" style="margin:0;">
+        <button class="tab ${reservationsTab==='upcoming'?'active':''}" data-tab="upcoming">${t('الحجوزات القادمة','Upcoming')}</button>
+      </div>
+      <div class="flex gap-8">
+        <button class="btn btn-secondary btn-sm" id="newGroupResBtn">${t('+ حجز جروب','+ Group Reservation')}</button>
+        <button class="btn btn-primary btn-sm" id="newResBtn">${t('+ حجز فردي','+ New Reservation')}</button>
+      </div>
+    </div>
+
+    <div class="card">
+      ${upcoming.length ? `
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>${t('النوع','Type')}</th>
+            <th>${t('الاسم / الشركة','Name / Company')}</th>
+            <th>${t('الغرف','Rooms')}</th>
+            <th>${t('عدد الضيوف','Guests')}</th>
+            <th>${t('الوصول','Arrival')}</th>
+            <th>${t('المغادرة','Departure')}</th>
+            <th>${t('الإفطار','Breakfast')}</th>
+            <th>${t('المصدر','Source')}</th>
+            <th></th>
+          </tr></thead>
+          <tbody>
+          ${upcoming.map(r=>`
+            <tr>
+              <td>${r.isGroup ? '👥 '+t('جروب','Group') : '👤 '+t('فردي','Individual')}</td>
+              <td><strong>${r.name}</strong></td>
+              <td>${(r.roomNumbers||[]).join(', ')||'—'}</td>
+              <td>${r.guestCount}</td>
+              <td>${fmtDate(r.arrival)}</td>
+              <td>${fmtDate(r.departure)}</td>
+              <td>${r.breakfast?'✔':'✘'}</td>
+              <td>${r.source ? (SOURCES_AR[r.source]||r.source) : '—'}</td>
+              <td>
+                <button class="btn btn-outline btn-sm" data-checkin="${r.id}">${t('تسجيل دخول','Check-In')}</button>
+                <button class="btn btn-ghost btn-sm" data-delres="${r.id}">🗑️</button>
+              </td>
+            </tr>
+          `).join('')}
+          </tbody>
+        </table>
+      </div>
+      ` : `<div class="empty-state"><div class="icon">📅</div><div>${t('لا توجد حجوزات قادمة','No upcoming reservations')}</div></div>`}
+    </div>
+  `;
+}
+
+function bindReservations(){
+  document.getElementById('newResBtn').onclick = ()=>{ activeModal={type:'newreservation'}; render(); };
+  document.getElementById('newGroupResBtn').onclick = ()=>{ activeModal={type:'newgroupreservation'}; render(); };
+
+  document.querySelectorAll('[data-checkin]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const res = state.reservations.find(r=>r.id===btn.dataset.checkin);
+      activeModal={type:'checkinFromReservation', reservation:res};
+      render();
+    };
+  });
+
+  document.querySelectorAll('[data-delres]').forEach(btn=>{
+    btn.onclick = ()=>{
+      if(!confirm(t('حذف هذا الحجز؟','Delete this reservation?'))) return;
+      state.reservations = state.reservations.filter(r=>r.id!==btn.dataset.delres);
+      saveState(); render();
+    };
+  });
+}
+
+/* ============================================================
+   AVAILABILITY CALENDAR
+   ============================================================ */
+function renderCalendar(){
+  const days = [];
+  for(let i=0;i<calRange;i++) days.push(addDays(todayStr(), i));
+
+  const allRooms = Object.values(state.rooms);
+
+  // build occupancy map per room per date
+  function roomStatusOnDate(room, dateStr){
+    // currently occupied & dates overlap
+    if(room.status==='occupied' && room.guest){
+      if(room.guest.arrival<=dateStr && dateStr<room.guest.departure) return 'occ';
+    }
+    // future reservations
+    const res = state.reservations.find(r=> (r.roomNumbers||[]).includes(room.number) && r.arrival<=dateStr && dateStr<r.departure);
+    if(res) return 'res';
+    if(room.status==='oos' || room.status==='maintenance') return 'oos';
+    return 'free';
+  }
+
+  const colorMap = {
+    occ: 'var(--status-occupied)',
+    res: 'var(--status-reserved)',
+    oos: 'var(--status-maint)',
+    free: 'var(--status-available-bg)'
+  };
+
+  return `
+    <div class="flex gap-8 mb-18">
+      <button class="tab ${calRange===7?'active':''}" data-range="7">7 ${t('أيام','Days')}</button>
+      <button class="tab ${calRange===14?'active':''}" data-range="14">14 ${t('أيام','Days')}</button>
+      <button class="tab ${calRange===30?'active':''}" data-range="30">30 ${t('يوم','Days')}</button>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--status-available-bg); border:1px solid var(--line);"></div><span>${t('متاحة','Available')}</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--status-occupied);"></div><span>${t('مشغولة','Occupied')}</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--status-reserved);"></div><span>${t('محجوزة','Reserved')}</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--status-maint);"></div><span>${t('غير متاحة','Unavailable')}</span></div>
+    </div>
+    <div class="card cal-wrap">
+      <div class="cal-grid" style="grid-template-columns: 90px repeat(${days.length}, 46px);">
+        <div class="cal-room-label" style="position:sticky;">${t('الغرفة','Room')}</div>
+        ${days.map(d=>{
+          const date = new Date(d);
+          return `<div class="cal-header-cell"><span>${date.toLocaleDateString(lang==='ar'?'ar-EG':'en-GB',{weekday:'short'})}</span><span>${date.getDate()}/${date.getMonth()+1}</span></div>`;
+        }).join('')}
+
+        ${allRooms.map(room=>`
+          <div class="cal-room-label">${room.number}</div>
+          ${days.map(d=>{
+            const s = roomStatusOnDate(room,d);
+            return `<div class="cal-cell" style="background:${colorMap[s]}; color:${s==='free'?'var(--ink)':'#fff'};" title="${room.number} · ${fmtDate(d)}"></div>`;
+          }).join('')}
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function bindCalendar(){
+  document.querySelectorAll('[data-range]').forEach(btn=>{
+    btn.onclick = ()=>{ calRange = Number(btn.dataset.range); render(); };
+  });
+}
+
+/* ============================================================
+   MAINTENANCE
+   ============================================================ */
+let maintenanceFilter = 'all';
+
+function renderMaintenance(){
+  const filters = [
+    {k:'all', ar:'الكل', en:'All'},
+    {k:'open', ar:'مفتوحة', en:'Open'},
+    {k:'inprogress', ar:'قيد التنفيذ', en:'In Progress'},
+    {k:'completed', ar:'مكتملة', en:'Completed'},
+  ];
+  let tickets = [...state.maintenance].sort((a,b)=>b.ts-a.ts);
+  if(maintenanceFilter!=='all') tickets = tickets.filter(m=>m.status===maintenanceFilter);
+
+  return `
+    <div class="flex-between mb-18" style="flex-wrap:wrap; gap:10px;">
+      <div class="tabs" style="margin:0;">
+        ${filters.map(f=>`<button class="tab ${maintenanceFilter===f.k?'active':''}" data-filter="${f.k}">${t(f.ar,f.en)}</button>`).join('')}
+      </div>
+      <button class="btn btn-primary btn-sm" id="newTicketBtnGlobal">${t('+ تذكرة جديدة','+ New Ticket')}</button>
+    </div>
+
+    ${tickets.length ? tickets.map(ticket=>renderTicketCard(ticket)).join('') : `<div class="empty-state card"><div class="icon">🛠️</div><div>${t('لا توجد تذاكر','No tickets')}</div></div>`}
+  `;
+}
+
+function renderTicketCard(ticket){
+  const meta = TICKET_STATUS_META[ticket.status];
+  const pmeta = PRIORITY_META[ticket.priority];
+  return `
+    <div class="card mb-12">
+      <div class="flex-between mb-12">
+        <div>
+          <strong>${t('غرفة','Room')} ${ticket.room}</strong>
+          <span class="pill ${meta.pill}" style="margin-right:8px; margin-left:8px;">${t(meta.ar,meta.en)}</span>
+          <span class="pill" style="background:var(--sand-deep); color:var(--ink);">${t('أولوية','Priority')}: ${t(pmeta.ar,pmeta.en)}</span>
+        </div>
+        <span class="text-muted text-sm">${fmtDateTime(ticket.ts)}</span>
+      </div>
+      <div class="mb-12">${ticket.problem}</div>
+      ${ticket.assignedTo ? `<div class="text-sm text-muted mb-12">${t('مكلف إلى','Assigned to')}: ${ticket.assignedTo}</div>`:''}
+      <div class="photo-row mb-12">
+        ${ticket.beforePhoto ? `<div><div class="text-sm text-muted">${t('قبل','Before')}</div><img class="photo-thumb" src="${ticket.beforePhoto}"></div>`:''}
+        ${ticket.afterPhoto ? `<div><div class="text-sm text-muted">${t('بعد','After')}</div><img class="photo-thumb" src="${ticket.afterPhoto}"></div>`:''}
+      </div>
+      <div class="flex gap-8" style="flex-wrap:wrap;">
+        ${ticket.status==='open' ? `<button class="btn btn-secondary btn-sm" data-progress="${ticket.id}">${t('بدء التنفيذ','Start Progress')}</button>`:''}
+        ${ticket.status!=='completed' ? `<button class="btn btn-primary btn-sm" data-complete="${ticket.id}">${t('إنهاء + رفع صورة بعد','Complete + After Photo')}</button>`:''}
+        <button class="btn btn-ghost btn-sm" data-delticket="${ticket.id}">🗑️ ${t('حذف','Delete')}</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindMaintenance(){
+  document.querySelectorAll('[data-filter]').forEach(btn=>{
+    btn.onclick = ()=>{ maintenanceFilter=btn.dataset.filter; render(); };
+  });
+  document.getElementById('newTicketBtnGlobal').onclick = ()=>{ activeModal={type:'newticket', room:null}; render(); };
+
+  document.querySelectorAll('[data-progress]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const ticket = state.maintenance.find(m=>m.id===btn.dataset.progress);
+      ticket.status='inprogress';
+      logActivity(`تذكرة صيانة غرفة ${ticket.room} قيد التنفيذ`, `Maintenance ticket for room ${ticket.room} in progress`, '🛠️');
+      saveState(); render();
+    };
+  });
+
+  document.querySelectorAll('[data-complete]').forEach(btn=>{
+    btn.onclick = ()=>{ activeModal={type:'completeticket', ticketId:btn.dataset.complete}; render(); };
+  });
+
+  document.querySelectorAll('[data-delticket]').forEach(btn=>{
+    btn.onclick = ()=>{
+      if(!confirm(t('حذف هذه التذكرة؟','Delete this ticket?'))) return;
+      state.maintenance = state.maintenance.filter(m=>m.id!==btn.dataset.delticket);
+      saveState(); render();
+    };
+  });
+}
+
+/* ============================================================
+   EXPENSES
+   ============================================================ */
+function renderExpenses(){
+  const sorted = [...state.expenses].sort((a,b)=>b.date.localeCompare(a.date) || b.ts-a.ts);
+  const total = state.expenses.reduce((s,e)=>s+Number(e.amount||0),0);
+
+  // totals by category
+  const byCat = {};
+  state.expenses.forEach(e=>{ byCat[e.category] = (byCat[e.category]||0) + Number(e.amount||0); });
+
+  return `
+    <div class="flex-between mb-18" style="flex-wrap:wrap; gap:10px;">
+      <div class="card" style="padding:14px 20px;">
+        <div class="text-muted">${t('إجمالي المصروفات','Total Expenses')}</div>
+        <div class="serif" style="font-size:26px; font-weight:800;">${total.toLocaleString()} ${t('ج.م','EGP')}</div>
+      </div>
+      <button class="btn btn-primary" id="newExpenseBtn">${t('+ مصروف جديد','+ New Expense')}</button>
+    </div>
+
+    ${Object.keys(byCat).length ? `
+    <div class="card mb-18">
+      <div class="section-title"><span class="eyebrow">${t('حسب التصنيف','By Category')}</span></div>
+      ${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>{
+        const catMeta = EXPENSE_CATEGORIES.find(c=>c.en===cat);
+        const pct = total ? (amt/total*100) : 0;
+        return `
+          <div class="flex-between mb-12">
+            <span>${catMeta ? t(catMeta.ar,catMeta.en) : cat}</span>
+            <strong>${amt.toLocaleString()} ${t('ج.م','EGP')}</strong>
+          </div>
+          <div class="stat-bar" style="margin-bottom:10px;"><div style="width:${pct}%; background:var(--coral);"></div></div>
+        `;
+      }).join('')}
+    </div>` : ''}
+
+    <div class="card">
+      <div class="section-title"><span class="eyebrow">${t('سجل المصروفات','Expense Log')}</span></div>
+      ${sorted.length ? `
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>${t('التاريخ','Date')}</th>
+            <th>${t('التصنيف','Category')}</th>
+            <th>${t('الوصف','Description')}</th>
+            <th>${t('المبلغ','Amount')}</th>
+            <th>${t('بواسطة','By')}</th>
+            <th>${t('إيصال','Receipt')}</th>
+            <th></th>
+          </tr></thead>
+          <tbody>
+          ${sorted.map(e=>{
+            const catMeta = EXPENSE_CATEGORIES.find(c=>c.en===e.category);
+            return `
+            <tr>
+              <td>${fmtDate(e.date)}</td>
+              <td>${catMeta?t(catMeta.ar,catMeta.en):e.category}</td>
+              <td>${e.description||'—'}</td>
+              <td><strong>${Number(e.amount).toLocaleString()} ${t('ج.م','EGP')}</strong></td>
+              <td>${lang==='ar'?(e.createdByAr||e.createdBy):(e.createdByEn||e.createdBy)}</td>
+              <td>${e.receiptPhoto ? `<img class="photo-thumb" style="max-height:50px; width:60px;" src="${e.receiptPhoto}">` : '—'}</td>
+              <td><button class="btn btn-ghost btn-sm" data-delexp="${e.id}">🗑️</button></td>
+            </tr>
+          `;}).join('')}
+          </tbody>
+        </table>
+      </div>
+      ` : `<div class="empty-state"><div class="icon">💰</div><div>${t('لا توجد مصروفات بعد','No expenses yet')}</div></div>`}
+    </div>
+  `;
+}
+
+function bindExpenses(){
+  document.getElementById('newExpenseBtn').onclick = ()=>{ activeModal={type:'newexpense'}; render(); };
+  document.querySelectorAll('[data-delexp]').forEach(btn=>{
+    btn.onclick = ()=>{
+      if(!confirm(t('حذف هذا المصروف؟','Delete this expense?'))) return;
+      state.expenses = state.expenses.filter(e=>e.id!==btn.dataset.delexp);
+      saveState(); render();
+    };
+  });
+}
+
+/* ============================================================
+   DAILY REPORTS
+   ============================================================ */
+let reportsTab = 'morning';
+
+function renderReports(){
+  const today = todayStr();
+  // gather today's activity events by type
+  const todaysLog = state.activityLog.filter(a=> new Date(a.ts).toISOString().slice(0,10) === today);
+  const checkIns = todaysLog.filter(a=> (a.text||'').includes('سجل دخول الضيف') || (a.textEn||'').toLowerCase().includes('checked in'));
+  const checkOuts = todaysLog.filter(a=> (a.text||'').includes('سجل خروج الضيف') || (a.textEn||'').toLowerCase().includes('checked out'));
+  const roomChanges = todaysLog.filter(a=> (a.text||'').includes('نقل') || (a.textEn||'').toLowerCase().includes('moved'));
+  const maintToday = state.maintenance.filter(m=> new Date(m.ts).toISOString().slice(0,10)===today);
+  const expensesToday = state.expenses.filter(e=>e.date===today);
+  const breakfastTomorrow = getBreakfastForecast(addDays(today,1));
+
+  return `
+    <div class="tabs">
+      <button class="tab ${reportsTab==='morning'?'active':''}" data-rtab="morning">☀️ ${t('تقرير الصباح','Morning Report')}</button>
+      <button class="tab ${reportsTab==='night'?'active':''}" data-rtab="night">🌙 ${t('تقرير المساء','Night Report')}</button>
+    </div>
+
+    <div class="card mb-18">
+      <div class="section-title"><span class="eyebrow">${t('تاريخ التقرير','Report Date')}</span></div>
+      <div style="font-size:18px; font-weight:700;">${fmtDate(today)}</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title"><span class="eyebrow">${t('تسجيلات الدخول','Check-Ins')}</span></div>
+        ${checkIns.length ? checkIns.map(a=>`<div class="log-item"><span class="log-icon">${a.icon}</span><div style="flex:1;">${lang==='ar'?a.text:(a.textEn||a.text)}</div></div>`).join('') : `<div class="text-muted">${t('لا يوجد','None')}</div>`}
+      </div>
+      <div class="card">
+        <div class="section-title"><span class="eyebrow">${t('تسجيلات الخروج','Check-Outs')}</span></div>
+        ${checkOuts.length ? checkOuts.map(a=>`<div class="log-item"><span class="log-icon">${a.icon}</span><div style="flex:1;">${lang==='ar'?a.text:(a.textEn||a.text)}</div></div>`).join('') : `<div class="text-muted">${t('لا يوجد','None')}</div>`}
+      </div>
+    </div>
+
+    <div class="card mb-18" style="margin-top:18px;">
+      <div class="section-title"><span class="eyebrow">${t('تغييرات الغرف','Room Changes')}</span></div>
+      ${roomChanges.length ? roomChanges.map(a=>`<div class="log-item"><span class="log-icon">${a.icon}</span><div style="flex:1;">${lang==='ar'?a.text:(a.textEn||a.text)}</div></div>`).join('') : `<div class="text-muted">${t('لا يوجد','None')}</div>`}
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title"><span class="eyebrow">${t('مهام الصيانة اليوم','Maintenance Tasks Today')}</span></div>
+        ${maintToday.length ? maintToday.map(m=>`<div class="log-item"><span class="log-icon">🛠️</span><div style="flex:1;">${t('غرفة','Room')} ${m.room} — ${m.problem}</div><span class="pill ${TICKET_STATUS_META[m.status].pill}">${t(TICKET_STATUS_META[m.status].ar,TICKET_STATUS_META[m.status].en)}</span></div>`).join('') : `<div class="text-muted">${t('لا يوجد','None')}</div>`}
+      </div>
+      <div class="card">
+        <div class="section-title"><span class="eyebrow">${t('مصروفات اليوم','Expenses Today')}</span></div>
+        ${expensesToday.length ? expensesToday.map(e=>{
+          const catMeta = EXPENSE_CATEGORIES.find(c=>c.en===e.category);
+          return `<div class="log-item"><span class="log-icon">💰</span><div style="flex:1;">${catMeta?t(catMeta.ar,catMeta.en):e.category} — ${e.description||''}</div><strong>${Number(e.amount).toLocaleString()} ${t('ج.م','EGP')}</strong></div>`;
+        }).join('') : `<div class="text-muted">${t('لا يوجد','None')}</div>`}
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="section-title"><span class="eyebrow">${t('ملاحظات هامة','Important Notes')}</span></div>
+      <div class="flex-between">
+        <span>🥐 ${t('عدد إفطار الغد','Tomorrow Breakfast Count')}</span>
+        <strong>${breakfastTomorrow}</strong>
+      </div>
+    </div>
+  `;
+}
+
+function bindReports(){
+  document.querySelectorAll('[data-rtab]').forEach(btn=>{
+    btn.onclick = ()=>{ reportsTab=btn.dataset.rtab; render(); };
+  });
+}
+
+/* ============================================================
+   ACTIVITY LOG
+   ============================================================ */
+function renderActivityLog(){
+  return `
+    <div class="card">
+      ${state.activityLog.length ? state.activityLog.map(a=>`
+        <div class="log-item">
+          <span class="log-icon">${a.icon}</span>
+          <div style="flex:1;">${lang==='ar'?a.text:(a.textEn||a.text)}</div>
+          <span class="log-time">${fmtDateTime(a.ts)}</span>
+        </div>
+      `).join('') : `<div class="empty-state"><div class="icon">🕒</div><div>${t('لا يوجد نشاط بعد','No activity yet')}</div></div>`}
+    </div>
+  `;
+}
+
+function bindActivityLog(){}
+
+/* ============================================================
+   EMPLOYEES
+   ============================================================ */
+let employeeDetailId = null;
+
+function employeeMonthTotals(emp, monthStr){
+  // monthStr = 'YYYY-MM'
+  const details = (emp.details||[]).filter(d=>d.date.slice(0,7)===monthStr);
+  const advances = (emp.advances||[]).filter(a=>a.date.slice(0,7)===monthStr);
+  const detailsTotal = details.reduce((s,d)=>s+Number(d.amount||0),0);
+  const advancesTotal = advances.reduce((s,a)=>s+Number(a.amount||0),0);
+  return { details, advances, detailsTotal, advancesTotal };
+}
+
+function renderEmployees(){
+  if(employeeDetailId) return renderEmployeeDetail(employeeDetailId);
+
+  return `
+    <div class="flex-between mb-18">
+      <div></div>
+      <button class="btn btn-primary btn-sm" id="newEmployeeBtn">${t('+ موظف جديد','+ New Employee')}</button>
+    </div>
+
+    ${state.employees.length ? `
+    <div class="room-grid" style="grid-template-columns:repeat(auto-fill, minmax(180px,1fr));">
+      ${state.employees.map(emp=>{
+        const month = todayStr().slice(0,7);
+        const totals = employeeMonthTotals(emp, month);
+        return `
+        <div class="card" data-emp="${emp.id}" style="cursor:pointer;">
+          <div style="font-weight:800; font-size:16px; margin-bottom:6px;">${emp.name}</div>
+          <div class="text-sm text-muted mb-12">${t('الراتب الأساسي','Base Salary')}: ${Number(emp.baseSalary||0).toLocaleString()} ${t('ج.م','EGP')}</div>
+          <div class="flex-between text-sm">
+            <span>${t('تفاصيل الشهر','Month Details')}</span>
+            <strong>${totals.detailsTotal.toLocaleString()}</strong>
+          </div>
+          <div class="flex-between text-sm">
+            <span>${t('سلف الشهر','Month Advances')}</span>
+            <strong>${totals.advancesTotal.toLocaleString()}</strong>
+          </div>
+        </div>
+        `;
+      }).join('')}
+    </div>
+    ` : `<div class="empty-state card"><div class="icon">👥</div><div>${t('لا يوجد موظفين بعد','No employees yet')}</div></div>`}
+  `;
+}
+
+function bindEmployees(){
+  document.getElementById('newEmployeeBtn').onclick = ()=>{ activeModal={type:'newemployee'}; render(); };
+  document.querySelectorAll('[data-emp]').forEach(el=>{
+    el.onclick = ()=>{ employeeDetailId = el.dataset.emp; render(); };
+  });
+}
+
+function renderEmployeeDetail(empId){
+  const emp = state.employees.find(e=>e.id===empId);
+  if(!emp){ employeeDetailId=null; return renderEmployees(); }
+
+  const month = todayStr().slice(0,7);
+  const totals = employeeMonthTotals(emp, month);
+  const allDetails = [...(emp.details||[])].sort((a,b)=>b.date.localeCompare(a.date));
+  const allAdvances = [...(emp.advances||[])].sort((a,b)=>b.date.localeCompare(a.date));
+
+  return `
+    <button class="btn btn-ghost mb-12" id="empBackBtn">${t('→ رجوع لقائمة الموظفين','→ Back to Employees')}</button>
+
+    <div class="card mb-18">
+      <div class="flex-between mb-12">
+        <div class="serif" style="font-size:28px; font-weight:800;">${emp.name}</div>
+        <button class="btn btn-outline btn-sm" id="editEmployeeBtn">${t('تعديل البيانات','Edit Info')}</button>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="text-muted">${t('الراتب الأساسي','Base Salary')}</div>
+          <div style="font-weight:700;">${Number(emp.baseSalary||0).toLocaleString()} ${t('ج.م','EGP')}</div>
+        </div>
+        <div>
+          <div class="text-muted">${t('الشهر الحالي','Current Month')}</div>
+          <div style="font-weight:700;">${month}</div>
+        </div>
+      </div>
+      ${emp.notes ? `<hr class="divider"><div class="text-muted">${t('ملاحظات','Notes')}</div><div>${emp.notes}</div>`:''}
+    </div>
+
+    <div class="grid-2 mb-18">
+      <div class="stat-card">
+        <div class="stat-val">${totals.detailsTotal.toLocaleString()}</div>
+        <div class="stat-label">${t('إجمالي التفاصيل هذا الشهر','Total Details This Month')}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${totals.advancesTotal.toLocaleString()}</div>
+        <div class="stat-label">${t('إجمالي السلف هذا الشهر','Total Advances This Month')}</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="flex-between mb-12">
+          <div class="section-title" style="margin:0;"><span class="eyebrow">${t('التفاصيل (يومية)','Details (Daily)')}</span></div>
+          <button class="btn btn-primary btn-sm" id="addDetailBtn">+ ${t('إضافة','Add')}</button>
+        </div>
+        ${allDetails.length ? `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>${t('التاريخ','Date')}</th><th>${t('المبلغ','Amount')}</th><th>${t('ملاحظة','Note')}</th><th></th></tr></thead>
+            <tbody>
+              ${allDetails.map(d=>`
+                <tr>
+                  <td>${fmtDate(d.date)}</td>
+                  <td><strong>${Number(d.amount).toLocaleString()}</strong></td>
+                  <td>${d.note||'—'}</td>
+                  <td><button class="btn btn-ghost btn-sm" data-deldetail="${d.id}">🗑️</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>` : `<div class="empty-state"><div class="icon">📝</div><div>${t('لا يوجد','None')}</div></div>`}
+      </div>
+
+      <div class="card">
+        <div class="flex-between mb-12">
+          <div class="section-title" style="margin:0;"><span class="eyebrow">${t('السلف (يومية)','Advances (Daily)')}</span></div>
+          <button class="btn btn-secondary btn-sm" id="addAdvanceBtn">+ ${t('إضافة','Add')}</button>
+        </div>
+        ${allAdvances.length ? `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>${t('التاريخ','Date')}</th><th>${t('المبلغ','Amount')}</th><th>${t('ملاحظة','Note')}</th><th></th></tr></thead>
+            <tbody>
+              ${allAdvances.map(a=>`
+                <tr>
+                  <td>${fmtDate(a.date)}</td>
+                  <td><strong>${Number(a.amount).toLocaleString()}</strong></td>
+                  <td>${a.note||'—'}</td>
+                  <td><button class="btn btn-ghost btn-sm" data-deladv="${a.id}">🗑️</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>` : `<div class="empty-state"><div class="icon">💵</div><div>${t('لا يوجد','None')}</div></div>`}
+      </div>
+    </div>
+
+    <div class="mb-18"></div>
+    <button class="btn btn-danger btn-sm" id="deleteEmployeeBtn">🗑️ ${t('حذف الموظف','Delete Employee')}</button>
+  `;
+}
+
+function bindEmployees_detail(){
+  document.getElementById('empBackBtn').onclick = ()=>{ employeeDetailId=null; render(); };
+  const editBtn = document.getElementById('editEmployeeBtn');
+  if(editBtn) editBtn.onclick = ()=>{ activeModal={type:'editemployee', empId:employeeDetailId}; render(); };
+
+  const addDetailBtn = document.getElementById('addDetailBtn');
+  if(addDetailBtn) addDetailBtn.onclick = ()=>{ activeModal={type:'addempentry', empId:employeeDetailId, kind:'details'}; render(); };
+
+  const addAdvanceBtn = document.getElementById('addAdvanceBtn');
+  if(addAdvanceBtn) addAdvanceBtn.onclick = ()=>{ activeModal={type:'addempentry', empId:employeeDetailId, kind:'advances'}; render(); };
+
+  document.querySelectorAll('[data-deldetail]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const emp = state.employees.find(e=>e.id===employeeDetailId);
+      emp.details = emp.details.filter(d=>d.id!==btn.dataset.deldetail);
+      saveState(); render();
+    };
+  });
+  document.querySelectorAll('[data-deladv]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const emp = state.employees.find(e=>e.id===employeeDetailId);
+      emp.advances = emp.advances.filter(a=>a.id!==btn.dataset.deladv);
+      saveState(); render();
+    };
+  });
+
+  const delBtn = document.getElementById('deleteEmployeeBtn');
+  if(delBtn) delBtn.onclick = ()=>{
+    if(!confirm(t('حذف هذا الموظف نهائياً؟','Delete this employee permanently?'))) return;
+    state.employees = state.employees.filter(e=>e.id!==employeeDetailId);
+    employeeDetailId=null;
+    saveState(); render();
+  };
+}
+
+/* override bindEmployees to dispatch to detail view */
+const _bindEmployeesList = bindEmployees;
+bindEmployees = function(){
+  if(employeeDetailId) return bindEmployees_detail();
+  return _bindEmployeesList();
+};
+
+/* ============================================================
+   SETTINGS (Owner only)
+   ============================================================ */
+function renderSettings(){
+  return `
+    ${currentUser.isOwner ? `
+    <div class="card mb-18">
+      <div class="section-title"><span class="eyebrow">${t('كلمات مرور المستخدمين','User Passwords')}</span></div>
+      <p class="text-muted text-sm mb-12">${t('يمكن للمالك فقط تعديل كلمات المرور لكل المستخدمين.','Only the Owner can edit passwords for all users.')}</p>
+      ${USERS.map(u=>`
+        <div class="form-row mb-12" style="align-items:end;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label>${lang==='ar'?u.name:u.nameEn} — ${lang==='ar'?u.roleLabel:u.roleLabelEn}</label>
+            <input type="text" inputmode="numeric" id="pw_${u.id}" value="${state.userPasswords[u.id]||''}">
+          </div>
+          <div>
+            <button class="btn btn-outline btn-sm" data-savepw="${u.id}">${t('حفظ','Save')}</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    ` : ''}
+
+    <div class="card" style="border-color:var(--status-oos);">
+      <div class="section-title"><span class="eyebrow" style="color:var(--status-oos);">${t('منطقة الخطر','Danger Zone')}</span></div>
+      <p class="text-muted text-sm mb-12">${t('سيتم حذف كل البيانات نهائياً: الغرف، الحجوزات، الصيانة، المصروفات، الموظفين، وسجل النشاط. كلمات المرور لن تتأثر.','This will permanently delete all data: rooms, reservations, maintenance, expenses, employees, and activity log. Passwords will not be affected.')}</p>
+      <button class="btn btn-danger" id="resetSystemBtn">${t('🗑️ تصفير النظام بالكامل','🗑️ Reset Entire System')}</button>
+    </div>
+  `;
+}
+
+function bindSettings(){
+  document.querySelectorAll('[data-savepw]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.savepw;
+      const val = document.getElementById('pw_'+id).value.trim();
+      if(!val){ showToast(t('من فضلك أدخل كلمة مرور','Please enter a password')); return; }
+      state.userPasswords[id] = val;
+      const u = USERS.find(x=>x.id===id);
+      logActivity(`${currentUser.name} غيّر كلمة مرور ${u.name}`, `${currentUser.nameEn} changed password for ${u.nameEn}`, '🔐');
+      saveState(); showToast(t('تم الحفظ','Saved'));
+    };
+  });
+
+  const resetBtn = document.getElementById('resetSystemBtn');
+  if(resetBtn) resetBtn.onclick = ()=>{
+    if(!confirm(t('هل أنت متأكد؟ سيتم حذف كل البيانات نهائياً ولا يمكن التراجع.','Are you sure? All data will be permanently deleted and cannot be undone.'))) return;
+    if(!confirm(t('تأكيد أخير: هل تريد بالفعل تصفير النظام بالكامل؟','Final confirmation: do you really want to reset the entire system?'))) return;
+
+    const preservedPasswords = {...state.userPasswords};
+    const def = defaultState();
+    def.userPasswords = preservedPasswords;
+    def.settings = {...state.settings};
+    state = def;
+    saveState();
+    logActivity(`${currentUser.name} قام بتصفير النظام بالكامل`, `${currentUser.nameEn} reset the entire system`, '🗑️');
+    saveState();
+    showToast(t('تم تصفير النظام','System reset complete'));
+    currentView='dashboard';
+    render();
+  };
+}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+function modalShell(title, bodyHtml, footerHtml){
+  return `
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>${title}</h2>
+          <button class="modal-close" id="modalClose">×</button>
+        </div>
+        ${bodyHtml}
+        ${footerHtml||''}
+      </div>
+    </div>
+  `;
+}
+
+function sourceLabel(s){ return lang==='ar' ? `${SOURCES_AR[s]||s}` : s; }
+function sourceOptionsSimple(selected){
+  return SOURCES.map(s=>`<option value="${s}" ${selected===s?'selected':''}>${sourceLabel(s)}</option>`).join('');
+}
+
+function renderModal(){
+  switch(activeModal.type){
+    case 'checkin': return modalCheckIn();
+    case 'checkout': return modalCheckOut();
+    case 'roomchange': return modalRoomChange();
+    case 'newreservation': return modalNewReservation();
+    case 'newgroupreservation': return modalNewGroupReservation();
+    case 'checkinFromReservation': return modalCheckInFromReservation();
+    case 'newticket': return modalNewTicket();
+    case 'completeticket': return modalCompleteTicket();
+    case 'newexpense': return modalNewExpense();
+    case 'newemployee': return modalNewEmployee();
+    case 'editemployee': return modalEditEmployee();
+    case 'addempentry': return modalAddEmpEntry();
+    default: return '';
+  }
+}
+
+function bindModal(){
+  const overlay = document.getElementById('modalOverlay');
+  const closeBtn = document.getElementById('modalClose');
+  const close = ()=>{ activeModal=null; render(); };
+  if(overlay) overlay.onclick = (e)=>{ if(e.target===overlay) close(); };
+  if(closeBtn) closeBtn.onclick = close;
+
+  switch(activeModal.type){
+    case 'checkin': return bindCheckIn(close);
+    case 'checkout': return bindCheckOut(close);
+    case 'roomchange': return bindRoomChange(close);
+    case 'newreservation': return bindNewReservation(close);
+    case 'newgroupreservation': return bindNewGroupReservation(close);
+    case 'checkinFromReservation': return bindCheckInFromReservation(close);
+    case 'newticket': return bindNewTicket(close);
+    case 'completeticket': return bindCompleteTicket(close);
+    case 'newexpense': return bindNewExpense(close);
+    case 'newemployee': return bindNewEmployee(close);
+    case 'editemployee': return bindEditEmployee(close);
+    case 'addempentry': return bindAddEmpEntry(close);
+  }
+}
+
+/* ---- CHECK-IN ---- */
+function modalCheckIn(){
+  const room = state.rooms[activeModal.room];
+  return modalShell(
+    `${t('تسجيل دخول','Check-In')} — ${t('غرفة','Room')} ${room.number}`,
+    `
+    <div class="form-group">
+      <label>${t('اسم الضيف','Guest Name')} *</label>
+      <input type="text" id="ci_name" required>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>${t('عدد الضيوف','Guest Count')}</label>
+        <input type="number" id="ci_count" min="1" value="1">
+      </div>
+      <div class="form-group">
+        <label>${t('مصدر الحجز','Source')}</label>
+        <select id="ci_source">${sourceOptionsSimple('Walk-In')}</select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>${t('تاريخ الوصول','Arrival Date')}</label>
+        <input type="date" id="ci_arrival" value="${todayStr()}">
+      </div>
+      <div class="form-group">
+        <label>${t('تاريخ المغادرة','Departure Date')}</label>
+        <input type="date" id="ci_departure" value="${addDays(todayStr(),1)}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-row"><input type="checkbox" id="ci_breakfast" checked> ${t('الإفطار مشمول','Breakfast Included')}</label>
+    </div>
+    <div class="form-group">
+      <label>${t('ملاحظات','Notes')}</label>
+      <textarea id="ci_notes"></textarea>
+    </div>
+    `,
+    `<div class="modal-actions">
+      <button class="btn btn-outline btn-block" id="modalCancel">${t('إلغاء','Cancel')}</button>
+      <button class="btn btn-primary btn-block" id="modalSubmit">${t('تسجيل الدخول','Check In')}</button>
+    </div>`
+  );
+}
+
+function bindCheckIn(close){
+  document.getElementById('modalCancel').onclick = close;
+  document.getElementById('modalSubmit').onclick = ()=>{
+    const name = document.getElementById('ci_name').value.trim();
+    if(!name){ showToast(t('من فضلك أدخل اسم الضيف','Please enter guest name')); return; }
+    const room = state.rooms[activeModal.room];
+    room.status='occupied';
+    room.guest = {
+      name,
+      count: Number(document.getElementById('ci_count').value)||1,
+      arrival: document.getElementById('ci_arrival').value,
+      departure: document.getElementById('ci_departure').value,
+      breakfast: document.getElementById('ci_breakfast').checked,
+      source: document.getElementById('ci_source').value,
+      notes: document.getElementById('ci_notes').value.trim(),
+    };
+    roomHistoryPush(room.number, {type:'checkin', text:`تسجيل دخول الضيف ${name}`, textEn:`Guest ${name} checked in`, icon:'🛎️'});
+    logActivity(`${currentUser.name} سجل دخول الضيف ${name} في غرفة ${room.number}`, `${currentUser.nameEn} checked in guest ${name} in room ${room.number}`, '🛎️');
+    saveState(); showToast(t('تم تسجيل الدخول','Checked in successfully')); close();
+  };
+}
+
+/* ---- CHECK-OUT ---- */
+function modalCheckOut(){
+  const room = state.rooms[activeModal.room];
+  return modalShell(
+    `${t('تسجيل خروج','Check-Out')} — ${t('غرفة','Room')} ${room.number}`,
+    `
+      <p class="text-muted mb-12">${t('سيتم تحويل حالة الغرفة إلى "تحتاج تنظيف" بعد استلام المفتاح.','Room status will become "Dirty" once the key is received.')}</p>
+      <div style="font-weight:700;">${t('الضيف','Guest')}: ${room.guest? room.guest.name : '—'}</div>
+    `,
+    `<div class="modal-actions">
+      <button class="btn btn-outline btn-block" id="modalCancel">${t('إلغاء','Cancel')}</button>
+      <button class="btn btn-secondary btn-block" id="modalSubmit">${t('تأكيد تسجيل الخروج','Confirm Check-Out')}</button>
+    </div>`
+  );
+}
+
+function bindCheckOut(close){
+  document.getElementById('modalCancel').onclick = close;
+  document.getElementById('modalSubmit').onclick = ()=>{
+    const room = state.rooms[activeModal.room];
+    const guestName = room.guest ? room.guest.name : '';
+    roomHistoryPush(room.number, {type:'checkout', text:`تسجيل خروج الضيف ${guestName}`, textEn:`Guest ${guestName} checked out`, icon:'👋'});
+    logActivity(`${currentUser.name} سجل خروج الضيف ${guestName} من غرفة ${room.number}`, `${currentUser.nameEn} checked out guest ${guestName} from room ${room.number}`, '👋');
+    room.guest = null;
+    room.status = 'dirty';
+    roomHistoryPush(room.number, {type:'status', text:'الغرفة تحتاج تنظيف', textEn:'Room marked Dirty', icon:'🧹'});
+    saveState(); showToast(t('تم تسجيل الخروج','Checked out successfully')); close();
+  };
+}
+
+/* ---- ROOM CHANGE ---- */
+function modalRoomChange(){
+  const room = state.rooms[activeModal.room];
+  const availableRooms = Object.values(state.rooms).filter(r=>r.status==='available' && r.number!==room.number);
+  return modalShell(
+    `${t('تغيير الغرفة','Room Change')} — ${t('من غرفة','From Room')} ${room.number}`,
+    `
+    <div class="form-group">
+      <label>${t('الغرفة الجديدة','New Room')}</label>
+      <select id="rc_room">
+        ${availableRooms.map(r=>`<option value="${r.number}">${r.number} — ${t(r.section,r.sectionEn)}</option>`).join('') || `<option value="">${t('لا توجد غرف متاحة','No available rooms')}</option>`}
+      </select>
+    </div>
+    `,
+    `<div class="modal-actions">
+      <button class="btn btn-outline btn-block" id="modalCancel">${t('إلغاء','Cancel')}</button>
+      <button class="btn btn-primary btn-block" id="modalSubmit" ${availableRooms.length?'':'disabled'}>${t('تأكيد التغيير','Confirm Change')}</button>
+    </div>`
+  );
+}
+
+function bindRoomChange(close){
+  document.getElementById('modalCancel').onclick = close;
+  const submit = document.getElementById('modalSubmit');
+  if(submit) submit.onclick = ()=>{
+    const fromRoom = state.rooms[activeModal.room];
+    const toNum = document.getElementById('rc_room').value;
+    if(!toNum) return;
+    const toRoom = state.rooms[toNum];
+    const guest = fromRoom.guest;
+
+    toRoom.status='occupied';
+    toRoom.guest = guest;
+    fromRoom.guest = null;
+    fromRoom.status='dirty';
+
+    roomHistoryPush(fromRoom.number, {type:'roomchange', text:`نقل الضيف ${guest.name} إلى غرفة ${toRoom.number}`, textEn:`Guest ${guest.name} moved to room ${toRoom.number}`, icon:'🔁'});
+    roomHistoryPush(toRoom.number, {type:'roomchange', text:`استقبال الضيف ${guest.name} من غرفة ${fromRoom.number}`, textEn:`Guest ${guest.name} moved from room ${fromRoom.number}`, icon:'🔁'});
+    roomHistoryPush(fromRoom.number, {type:'status', text:'الغرفة تحتاج تنظيف', textEn:'Room marked Dirty', icon:'🧹'});
+
+    logActivity(
+      `${currentUser.name} نقل الضيف ${guest.name} من غرفة ${fromRoom.number} إلى غرفة ${toRoom.number}`,
+      `${currentUser.nameEn} moved guest ${guest.name} from room ${fromRoom.number} to room ${toRoom.number}`,
+      '🔁'
+    );
+
+    saveState(); showToast(t('تم تغيير الغرفة','Room changed successfully')); 
+    activeRoomDetail = toRoom.number;
+    close();
+  };
+}
+
+/* ---- NEW INDIVIDUAL RESERVATION ---- */
+function modalNewReservation(){
+  const availableRooms = Object.values(state.rooms).filter(r=>r.status!=='oos');
+  return modalShell(
+    t('حجز فردي جديد','New Individual Reservation'),
+    `
+    <div class="form-group">
+      <label>${t('اسم الضيف','Guest Name')} *</label>
+      <input type="text" id="r_name" required>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>${t('عدد الضيوف','Guest Count')}</label>
+        <input type="number" id="r_count" min="1" value="1">
+      </div>
+      <div class="form-group">
+        <label>${t('مصدر الحجز','Source')}</label>
+        <select id="r_source">${sourceOptionsSimple('Direct')}</select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>${t('تاريخ الوصول','Arrival Date')}</label>
+        <input type="date" id="r_arrival" value="${todayStr()}">
+      </div>
+      <div class="form-group">
+        <label>${t('تاريخ المغادرة','Departure Date')}</label>
+        <input type="date" id="r_departure" value="${addDays(todayStr(),1)}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>${t('رقم الغرفة (اختياري)','Room Number (optional)')}</label>
+      <select id="r_room">
+        <option value="">${t('— بدون تحديد —','— Unassigned —')}</option>
+        ${availableRooms.map(r=>`<option value="${r.number}">${r.number} — ${t(r.section,r.sectionEn)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-row"><input type="checkbox" id="r_breakfast" checked> ${t('الإفطار مشمول','Breakfast Included')}</label>
+    </div>
+    <div class="form-group">
+      <label>${t('ملاحظات','Notes')}</label>
+      <textarea id="r_notes"></textarea>
+    </div>
+    `,
+    `<div class="modal-actions">
+      <button class="btn btn-outline btn-block" id="modalCancel">${t('إلغاء','Cancel')}</button>
+      <button class="btn btn-primary btn-block" id="modalSubmit">${t('حفظ الحجز','Save Reservation')}</button>
+    </div>`
+  );
+}
+
+function bindNewReservation(close){
+  document.getElementById('modalCancel').onclick = close;
+  document.getElementById('modalSubmit').onclick = ()=>{
+    const name = document.getElementById('r_name').value.trim();
+    if(!name){ showToast(t('من فضلك أدخل اسم الضيف','Please enter guest name')); return; }
+    const roomNum = document.getElementById('r_room').value;
+    const reservation = {
+      id: uid(),
+      isGroup:false,
+      name,
+      guestCount: Number(document.getElementById('r_count').value)||1,
+      arrival: document.getElementById('r_arrival').value,
+      departure: document.getElementById('r_departure').value,
+      breakfast: document.getElementById('r_breakfast').checked,
+      source: document.getElementById('r_source').value,
+      notes: document.getElementById('r_notes').value.trim(),
+      roomNumbers: roomNum ? [roomNum] : [],
+    };
+    state.reservations.push(reservation);
+
+    // mark room reserved if assigned and not already occupied
+    if(roomNum && state.rooms[roomNum].status==='available'){
+      state.rooms[roomNum].status='reserved';
+      roomHistoryPush(roomNum, {type:'reservation', text:`تم حجز الغرفة للضيف ${name}`, textEn:`Room reserved for guest ${name}`, icon:'📅'});
+    }
+
+    logActivity(`${currentUser.name} أضاف حجز جديد للضيف ${name}`, `${currentUser.nameEn} added new reservation for ${name}`, '📅');
+    saveState(); showToast(t('تم حفظ الحجز','Reservation saved')); close();
+  };
+}
+
+/* ---- NEW GROUP RESERVATION ---- */
+function modalNewGroupReservation(){
+  return modalShell(
+    t('حجز جروب جديد','New Group Reservation'),
+    `
+    <div class="form-group">
+      <label>${t('اسم الشركة / الجروب','Company / Group Name')} *</label>
+      <input type="text" id="g_name" required>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>${t('عدد الضيوف','Guest Count')}</label>
+        <input type="number" id="g_guests" min="1" value="2">
+      </div>
+      <div class="form-group">
+        <label>${t('عدد الغرف','Room Count')}</label>
+        <input type="number" id="g_rooms" min="1" value="1">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>${t('تاريخ الوصول','Arrival Date')}</label>
+        <input type="date" id="g_arrival" value="${todayStr()}">
+      </div>
+      <div class="form-group">
+        <label>${t('تاريخ المغادرة','Departure Date')}</label>
+        <input type="date" id="g_departure" value="${addDays(todayStr(),1)}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-row"><input type="checkbox" id="g_breakfast" checked> ${t('الإفطار مشمول','Breakfast Included')}</label>
+    </div>
+    <div class="form-group">
+      <label>${t('ملاحظات','Notes')}</label>
+      <textarea id="g_notes"></textarea>
+    </div>
+    <p class="text-muted text-sm">${t('سيقوم النظام بتخصيص الغرف المتاحة تلقائياً من بين الغرف المتاحة حالياً.','The system will automatically allocate available rooms.')}</p>
+    `,
+    `<div class="modal-actions">
+      <button class="btn btn-outline btn-block" id="modalCancel">${t('إلغاء','Cancel')}</button>
+      <button class="btn btn-primary btn-block" id="modalSubmit">${t('حفظ الحجز','Save Reservation')}</button>
+    </div>`
+  );
+}
+
+function bindNewGroupReservation(close){
+  document.getElementById('modalCancel').onclick = close;
+  document.getElementById('modalSubmit').onclick = ()=>{
+    const name = document.getElementById('g_name').value.trim();
+    if(!name){ showToast(t('من فضلك أدخل اسم الجروب','Please enter group name')); return; }
+    const roomCount = Number(document.getElementById('g_rooms').value)||1;
+    const availableRooms = Object.values(state.rooms).filter(r=>r.status==='available');
+
+    if(availableRooms.length < roomCount){
+      showToast(t(`عدد الغرف المتاحة غير كافٍ (${availableRooms.length} متاحة)`, `Not enough available rooms (${availableRooms.length} available)`));
+      return;
+    }
+
+    const allocated = availableRooms.slice(0, roomCount).map(r=>r.number);
+    const reservation = {
+      id: uid(),
+      isGroup:true,
+      name,
+      guestCount: Number(document.getElementById('g_guests').value)||1,
+      roomCount,
+      arrival: document.getElementById('g_arrival').value,
+      departure: document.getElementById('g_departure').value,
+      breakfast: document.getElementById('g_breakfast').checked,
+      notes: document.getElementById('g_notes').value.trim(),
+      roomNumbers: allocated,
+    };
+    state.reservations.push(reservation);
+
+    allocated.forEach(num=>{
+      state.rooms[num].status='reserved';
+      roomHistoryPush(num, {type:'reservation', text:`تم حجز الغرفة للجروب ${name}`, textEn:`Room reserved for group ${name}`, icon:'📅'});
+    });
+
+    logActivity(`${currentUser.name} أضاف حجز جروب جديد: ${name} (${allocated.join(', ')})`, `${currentUser.nameEn} added new group reservation: ${name} (${allocated.join(', ')})`, '👥');
+    saveState(); showToast(t('تم حفظ حجز الجروب','Group reservation saved')); close();
+  };
+}
+
+/* ---- CHECK-IN FROM RESERVATION ---- */
+function modalCheckInFromReservation(){
+  const res = activeModal.reservation;
+  const availableRooms = Object.values(state.rooms).filter(r=>r.status==='available' || r.status==='reserved');
+  const isGroup = res.isGroup;
+
+  if(!isGroup){
+    return modalShell(
+      `${t('تسجيل دخول من الحجز','Check-In from Reservation')} — ${res.name}`,
+      `
+      <div class="form-group">
+        <label>${t('الغرفة','Room')}</label>
+        <select id="cir_room">
+          ${availableRooms.map(r=>`<option value="${r.number}" ${ (res.roomNumbers||[])[0]===r.number ? 'selected':''}>${r.number} — ${t(r.section,r.sectionEn)}</option>`).join('') || `<option value="">${t('لا توجد غرف متاحة','No available rooms')}</option>`}
+        </select>
+      </div>
+      <p class="text-muted text-sm">${t('سيتم نقل بيانات الحجز إلى الغرفة المختارة وتفعيل تسجيل الدخول.','Reservation details will be applied to the selected room and check-in activated.')}</p>
+      `,
+      `<div class="modal-actions">
+        <button class="btn btn-outline btn-block" id="modalCancel">${t('إلغاء','Cancel')}</button>
+        <button class="btn btn-primary btn-block" id="modalSubmit" ${availableRooms.length?'':'disabled'}>${t('تسجيل الدخول','Check In')}</button>
+      </div>`
+    );
+  }
+
+  // Group reservation - check in each room individually, listing rooms
+  return modalShell(
+    `${t('تسجيل دخول الجروب','Group Check-In')} — ${res.name}`,
+    `
+    <p class="text-muted mb-12">${t('اضغط على غرفة لتسجيل دخول الضيوف فيها بشكل منفصل من شاشة الغرفة.','Tap a room to check in guests for it individually from the room screen.')}</p>
+    <div class="room-grid">
+      ${(res.roomNumbers||[]).map(num=>{
+        const r = state.rooms[num];
+        const meta = STATUS_META[r.status];
+        return `<div class="room-card status-${meta.cls}" data-grouproom="${num}" style="cursor:pointer;">
+          <div class="room-badge">${t(meta.ar,meta.en)}</div>
+          <div class="room-num">${num}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    `,
+    `<div class="modal-actions">
+      <button class="btn btn-outline btn-block" id="modalCancel">${t('إغلاق','Close')}</button>
+    </div>`
+  );
+}
+
+function bindCheckInFromReservation(close){
+  document.getElementById('modalCancel').onclick = close;
+  const res = activeModal.reservation;
+
+  if(!res.isGroup){
+    const submit = document.getElementById('modalSubmit');
+    if(submit) submit.onclick = ()=>{
+      const roomNum = document.getElementById('cir_room').value;
+      if(!roomNum) return;
+      const room = state.rooms[roomNum];
+      room.status='occupied';
+      room.guest = {
+        name: res.name,
+        count: res.guestCount,
+        arrival: res.arrival,
+        departure: res.departure,
+        breakfast: res.breakfast,
+        source: res.source,
+        notes: res.notes,
+      };
+      roomHistoryPush(room.number, {type:'checkin', text:`تسجيل دخول الضيف ${res.name} (من الحجز)`, textEn:`Guest ${res.name} checked in (from reservation)`, icon:'🛎️'});
+      logActivity(`${currentUser.name} سجل دخول الضيف ${res.name} في غرفة ${room.number}`, `${currentUser.nameEn} checked in guest ${res.name} in room ${room.number}`, '🛎️');
+      state.reservations = state.reservations.filter(r=>r.id!==res.id);
+      saveState(); showToast(t('تم تسجيل الدخول','Checked in successfully')); close();
+    };
+  } else {
+    document.querySelectorAll('[data-grouproom]').forEach(el=>{
+      el.onclick = ()=>{
+        activeModal = {type:'checkin', room: el.dataset.grouproom, fromGroupRes: res.id};
+        render();
+      };
+    });
+  }
+}
+
+/* ---- NEW MAINTENANCE TICKET ---- */
+function modalNewTicket(){
+  const rooms = Object.values(state.rooms);
+  return modalShell(
+    t('تذكرة صيانة جديدة','New Maintenance Ticket'),
+    `
+    <div class="form-group">
+      <label>${t('رقم الغرفة','Room Number')}</label>
+      <select id="mt_room">
+        ${rooms.map(r=>`<option value="${r.number}" ${activeModal.room===r.number?'selected':''}>${r.number} — ${t(r.section,r.sectionEn)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>${t('المشكلة','Problem')} *</label>
+      <textarea id="mt_problem" required></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>${t('الأولوية','Priority')}</label>
+        <select id="mt_priority">
+          <option value="high">${t('عاجل','High')}</option>
+          <option value="medium" selected>${t('متوسط','Medium')}</option>
+          <option value="low">${t('منخفض','Low')}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>${t('مكلف إلى','Assigned To')}</label>
+        <input type="text" id="mt_assigned" placeholder="${t('اسم الفني','Technician name')}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>${t('صورة قبل (اختياري)','Before Photo (optional)')}</label>
+      <input type="file" id="mt_before" accept="image/*">
+    </div>
+    `,
+    `<div class="modal-actions">
+      <button class="btn btn-outline btn-block" id="modalCancel">${t('إلغاء','Cancel')}</button>
+      <button class="btn btn-primary btn-block" id="modalSubmit">${t('فتح التذكرة','Open Ticket')}</button>
+    </div>`
+  );
+}
+
+function bindNewTicket(close){
+  document.getElementById('modalCancel').onclick = close;
+  document.getElementById('modalSubmit').onclick = async ()=>{
+    const problem = document.getElementById('mt_problem').value.trim();
+    if(!problem){ showToast(t('من فضلك أدخل وصف المشكلة','Please enter the problem')); return; }
+    const roomNum = document.getElementById('mt_room').value;
+    const fileInput = document.getElementById('mt_before');
+    let beforePhoto=null;
+    if(fileInput.files[0]) beforePhoto = await fileToDataUrl(fileInput.files[0]);
+
+    const ticket = {
+      id: uid(), ts: Date.now(),
+      room: roomNum,
+      problem,
+      priority: document.getElementById('mt_priority').value,
+      assignedTo: document.getElementById('mt_assigned').value.trim(),
+      status:'open',
+      beforePhoto, afterPhoto:null,
+    };
+    state.maintenance.push(ticket);
+
+    // set room to maintenance status if currently available
+    if(state.rooms[roomNum].status==='available'){
+      state.rooms[roomNum].status='maintenance';
+    }
+    roomHistoryPush(roomNum, {type:'maintenance', text:`فتح تذكرة صيانة: ${problem}`, textEn:`Maintenance ticket opened: ${problem}`, icon:'🛠️'});
+    logActivity(`${currentUser.name} فتح تذكرة صيانة لغرفة ${roomNum}`, `${currentUser.nameEn} opened a maintenance ticket for room ${roomNum}`, '🛠️');
+    saveState(); showToast(t('تم فتح التذكرة','Ticket created')); close();
+  };
+}
+
+/* ---- COMPLETE TICKET ---- */
+function modalCompleteTicket(){
+  return modalShell(
+    t('إنهاء تذكرة الصيانة','Complete Maintenance Ticket'),
+    `
+    <div class="form-group">
+      <label>${t('صورة بعد الإصلاح (اختياري)','After Photo (optional)')}</label>
+      <input type="file" id="ct_after" accept="image/*">
+    </div>
+    `,
+    `<div class="modal-actions">
+      <button class="btn btn-outline btn-block" id="modalCancel">${t('إلغاء','Cancel')}</button>
+      <button class="btn btn-primary btn-block" id="modalSubmit">${t('إنهاء التذكرة','Complete Ticket')}</button>
+    </div>`
+  );
+}
+
+function bindCompleteTicket(close){
+  document.getElementById('modalCancel').onclick = close;
+  document.getElementById('modalSubmit').onclick = async ()=>{
+    const ticket = state.maintenance.find(m=>m.id===activeModal.ticketId);
+    const fileInput = document.getElementById('ct_after');
+    if(fileInput.files[0]) ticket.afterPhoto = await fileToDataUrl(fileInput.files[0]);
+    ticket.status='completed';
+
+    // if room was in maintenance status due to this ticket, restore to available (only if no other open tickets)
+    const room = state.rooms[ticket.room];
+    const otherOpen = state.maintenance.some(m=>m.room===ticket.room && m.id!==ticket.id && m.status!=='completed');
+    if(room.status==='maintenance' && !otherOpen){
+      room.status='available';
+    }
+    roomHistoryPush(ticket.room, {type:'maintenance', text:`تم إنهاء تذكرة الصيانة: ${ticket.problem}`, textEn:`Maintenance ticket completed: ${ticket.problem}`, icon:'✅'});
+    logActivity(`${currentUser.name} أنهى تذكرة صيانة غرفة ${ticket.room}`, `${currentUser.nameEn} completed maintenance ticket for room ${ticket.room}`, '✅');
+    saveState(); showToast(t('تم إنهاء التذكرة','Ticket completed')); close();
+  };
+}
+
+/* ---- NEW EXPENSE ---- */
+function modalNewExpense(){
+  return modalShell(
+    t('مصروف جديد','New Expense'),
+    `
+    <div class="form-row">
+      <div class="form-group">
+        <label>${t('المبلغ','Amount')} *</label>
+        <input type="number" id="ex_amount" min="0" step="0.01" required>
+      </div>
+      <div class="form-group">
+        <label>${t('التاريخ','Date')}</label>
+        <input type="date" id="ex_date" value="${todayStr()}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>${t('التصنيف','Category')}</label>
+      <select id="ex_category">
+        ${EXPENSE_CATEGORIES.map(c=>`<option value="${c.en}">${t(c.ar,c.en)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>${t('الوصف','Description')}</label>
+      <textarea id="ex_desc"></textarea>
+    </div>
+    <div class="form-group">
+      <label>${t('صورة الإيصال (اختياري)','Receipt Photo (optional)')}</label>
+      <input type="file" id="ex_receipt" accept="image/*">
+    </div>
+    `,
+    `<div class="modal-actions">
+      <button class="btn btn-outline btn-block" id="modalCancel">${t('إلغاء','Cancel')}</button>
+      <button class="btn btn-primary btn-block" id="modalSubmit">${t('حفظ المصروف','Save Expense')}</button>
+    </div>`
+  );
+}
+
+function bindNewExpense(close){
+  document.getElementById('modalCancel').onclick = close;
+  document.getElementById('modalSubmit').onclick = async ()=>{
+    const amount = Number(document.getElementById('ex_amount').value);
+    if(!amount){ showToast(t('من فضلك أدخل المبلغ','Please enter the amount')); return; }
+    const fileInput = document.getElementById('ex_receipt');
+    let receiptPhoto=null;
+    if(fileInput.files[0]) receiptPhoto = await fileToDataUrl(fileInput.files[0]);
+
+    const expense = {
+      id: uid(), ts: Date.now(),
+      amount,
+      date: document.getElementById('ex_date').value,
+      category: document.getElementById('ex_category').value,
+      description: document.getElementById('ex_desc').value.trim(),
+      receiptPhoto,
+      createdBy: currentUser.id,
+      createdByAr: currentUser.name,
+      createdByEn: currentUser.nameEn,
+    };
+    state.expenses.push(expense);
+    const catMeta = EXPENSE_CATEGORIES.find(c=>c.en===expense.category);
+    logActivity(
+      `${currentUser.name} أضاف مصروف ${amount.toLocaleString()} ج.م (${catMeta?catMeta.ar:expense.category})`,
+      `${currentUser.nameEn} added expense ${amount.toLocaleString()} EGP (${catMeta?catMeta.en:expense.category})`,
+      '💰'
+    );
+    saveState(); showToast(t('تم حفظ المصروف','Expense saved')); close();
+  };
+}
+
+/* ---- NEW EMPLOYEE ---- */
+function modalNewEmployee(){
+  return modalShell(
+    t('موظف جديد','New Employee'),
+    `
+    <div class="form-group">
+      <label>${t('اسم الموظف','Employee Name')} *</label>
+      <input type="text" id="emp_name" required>
+    </div>
+    <div class="form-group">
+      <label>${t('الراتب الأساسي','Base Salary')}</label>
+      <input type="number" id="emp_salary" min="0" step="0.01" value="0">
+    </div>
+    <div class="form-group">
+      <label>${t('ملاحظات','Notes')}</label>
+      <textarea id="emp_notes"></textarea>
+    </div>
+    `,
+    `<div class="modal-actions">
+      <button class="btn btn-outline btn-block" id="modalCancel">${t('إلغاء','Cancel')}</button>
+      <button class="btn btn-primary btn-block" id="modalSubmit">${t('حفظ','Save')}</button>
+    </div>`
+  );
+}
+
+function bindNewEmployee(close){
+  document.getElementById('modalCancel').onclick = close;
+  document.getElementById('modalSubmit').onclick = ()=>{
+    const name = document.getElementById('emp_name').value.trim();
+    if(!name){ showToast(t('من فضلك أدخل اسم الموظف','Please enter employee name')); return; }
+    const emp = {
+      id: uid(),
+      name,
+      baseSalary: Number(document.getElementById('emp_salary').value)||0,
+      notes: document.getElementById('emp_notes').value.trim(),
+      details:[],
+      advances:[],
+    };
+    state.employees.push(emp);
+    logActivity(`${currentUser.name} أضاف موظف جديد: ${name}`, `${currentUser.nameEn} added new employee: ${name}`, '👥');
+    saveState(); showToast(t('تم حفظ الموظف','Employee saved')); close();
+  };
+}
+
+/* ---- EDIT EMPLOYEE ---- */
+function modalEditEmployee(){
+  const emp = state.employees.find(e=>e.id===activeModal.empId);
+  return modalShell(
+    t('تعديل بيانات الموظف','Edit Employee'),
+    `
+    <div class="form-group">
+      <label>${t('اسم الموظف','Employee Name')} *</label>
+      <input type="text" id="emp_name" value="${emp.name}" required>
+    </div>
+    <div class="form-group">
+      <label>${t('الراتب الأساسي','Base Salary')}</label>
+      <input type="number" id="emp_salary" min="0" step="0.01" value="${emp.baseSalary||0}">
+    </div>
+    <div class="form-group">
+      <label>${t('ملاحظات','Notes')}</label>
+      <textarea id="emp_notes">${emp.notes||''}</textarea>
+    </div>
+    `,
+    `<div class="modal-actions">
+      <button class="btn btn-outline btn-block" id="modalCancel">${t('إلغاء','Cancel')}</button>
+      <button class="btn btn-primary btn-block" id="modalSubmit">${t('حفظ','Save')}</button>
+    </div>`
+  );
+}
+
+function bindEditEmployee(close){
+  document.getElementById('modalCancel').onclick = close;
+  document.getElementById('modalSubmit').onclick = ()=>{
+    const emp = state.employees.find(e=>e.id===activeModal.empId);
+    const name = document.getElementById('emp_name').value.trim();
+    if(!name){ showToast(t('من فضلك أدخل اسم الموظف','Please enter employee name')); return; }
+    emp.name = name;
+    emp.baseSalary = Number(document.getElementById('emp_salary').value)||0;
+    emp.notes = document.getElementById('emp_notes').value.trim();
+    saveState(); showToast(t('تم الحفظ','Saved')); close();
+  };
+}
+
+/* ---- ADD EMPLOYEE ENTRY (detail or advance) ---- */
+function modalAddEmpEntry(){
+  const isDetail = activeModal.kind==='details';
+  return modalShell(
+    isDetail ? t('إضافة تفصيل','Add Detail') : t('إضافة سلفة','Add Advance'),
+    `
+    <div class="form-row">
+      <div class="form-group">
+        <label>${t('التاريخ','Date')}</label>
+        <input type="date" id="ee_date" value="${todayStr()}">
+      </div>
+      <div class="form-group">
+        <label>${t('المبلغ','Amount')} *</label>
+        <input type="number" id="ee_amount" min="0" step="0.01" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>${t('ملاحظة','Note')}</label>
+      <input type="text" id="ee_note">
+    </div>
+    `,
+    `<div class="modal-actions">
+      <button class="btn btn-outline btn-block" id="modalCancel">${t('إلغاء','Cancel')}</button>
+      <button class="btn btn-primary btn-block" id="modalSubmit">${t('حفظ','Save')}</button>
+    </div>`
+  );
+}
+
+function bindAddEmpEntry(close){
+  document.getElementById('modalCancel').onclick = close;
+  document.getElementById('modalSubmit').onclick = ()=>{
+    const amount = Number(document.getElementById('ee_amount').value);
+    if(!amount){ showToast(t('من فضلك أدخل المبلغ','Please enter the amount')); return; }
+    const emp = state.employees.find(e=>e.id===activeModal.empId);
+    const entry = {
+      id: uid(),
+      date: document.getElementById('ee_date').value,
+      amount,
+      note: document.getElementById('ee_note').value.trim(),
+    };
+    emp[activeModal.kind].push(entry);
+    const kindLabel = activeModal.kind==='details' ? t('تفصيل','detail') : t('سلفة','advance');
+    logActivity(`${currentUser.name} أضاف ${kindLabel} لـ ${emp.name}: ${amount.toLocaleString()}`, `${currentUser.nameEn} added ${activeModal.kind==='details'?'detail':'advance'} for ${emp.name}: ${amount.toLocaleString()}`, '💵');
+    saveState(); showToast(t('تم الحفظ','Saved')); close();
+  };
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+render();
+initCloudSync();
+</script>
+</body>
+</html>
